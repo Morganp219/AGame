@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌀 MAXIMUM CHAOS PAINT 9000 🌀</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            cursor: crosshair;
+            transition: filter 0.3s;
+        }
+
+        #mainview {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: filter 0.2s;
+        }
+
+        #toolbar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(240, 240, 240, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 400px;
+            transition: all 0.3s;
+        }
+
+        #toolbar label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        #toolbar input, #toolbar select {
+            padding: 5px 8px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .chaos-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            z-index: 5000;
+        }
+
+        .glitch-text {
+            position: fixed;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 8000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .floating-emoji {
+            position: fixed;
+            font-size: 48px;
+            pointer-events: none;
+            z-index: 4000;
+            animation: float-up 3s ease-out forwards;
+        }
+
+        @keyframes float-up {
+            to {
+                transform: translateY(-200px);
+                opacity: 0;
+            }
+        }
+
+        .screen-crack {
+            position: fixed;
+            pointer-events: none;
+            z-index: 15000;
+            mix-blend-mode: multiply;
+        }
+
+        #chaosOverlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        #matrixRain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 3000;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mainview"></canvas>
+    <canvas id="matrixRain"></canvas>
+    <div id="chaosOverlay"></div>
+
+    <script>
+/* ═══════════════════════════════════════════════════════════════
+   MAXIMUM CHAOS PAINT 9000
+   A Drawing Application That Gradually Loses Its Mind
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ================= MISSING GLOBAL VARIABLES ================= */
+const POST_BOSS_CHAOS_DURATION = 15000;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let inputLocked = false;
+
+/* ================= ENHANCED GLOBAL VARIABLES ================= */
+let chaosLevel = 0; // Increases over time, unlocks new chaos
+let realityStability = 100; // Decreases with chaos, affects everything
+let gravityEnabled = false;
+let timeWarpActive = false;
+let invertedControls = false;
+let colorInversionActive = false;
+let mirrorModeActive = false;
+let explosionModeActive = false;
+let cursedMode = false;
+let dimensionalRiftOpen = false;
+let aiRebellionActive = false;
+let physicsEnabled = false;
+let magneticCursor = false;
+let rainbowTrailActive = false;
+let glitchIntensity = 0;
+let cosmicHorrorLevel = 0;
+
+/* ================= PARTICLE SYSTEM ARRAYS ================= */
+const particles = [];
+const explosions = [];
+const floatingTexts = [];
+const dimensionalRifts = [];
+const gravitationalBodies = [];
+const magneticFields = [];
+const timeDistortions = [];
+const realityAnchors = [];
+
+/* ================= SCREEN SHAKE (ENHANCED) ================= */
+function screenShake(intensity = 5, duration = 100) {
+    const startX = window.scrollX;
+    const startY = window.scrollY;
+    const start = performance.now();
+
+    function shake() {
+        const now = performance.now();
+        const elapsed = now - start;
+
+        if (elapsed < duration) {
+            const dx = (Math.random() - 0.5) * intensity;
+            const dy = (Math.random() - 0.5) * intensity;
+            window.scrollTo(startX + dx, startY + dy);
+            requestAnimationFrame(shake);
+        } else {
+            window.scrollTo(startX, startY);
+        }
+    }
+    shake();
+}
+
+/* ================= MEGA SCREEN SHAKE ================= */
+function megaScreenShake(intensity = 30, duration = 500) {
+    screenShake(intensity, duration);
+    
+    // Add rotational shake
+    const toolbar = document.getElementById("toolbar");
+    if (toolbar) {
+        const startRotation = 0;
+        const start = performance.now();
+        
+        function rotateShake() {
+            const now = performance.now();
+            const elapsed = now - start;
+            
+            if (elapsed < duration) {
+                const rotation = Math.sin(elapsed / 20) * intensity * 0.5;
+                toolbar.style.transform = `rotate(${rotation}deg)`;
+                requestAnimationFrame(rotateShake);
+            } else {
+                toolbar.style.transform = 'rotate(0deg)';
+            }
+        }
+        rotateShake();
+    }
+}
+
+/* ================= RANDOM COLOR UTILITIES ================= */
+function randomColor() {
+    return `rgb(${r()},${r()},${r()})`;
+}
+
+function r() {
+    return Math.floor(Math.random() * 256);
+}
+
+function randomPastelColor() {
+    return `hsl(${Math.random() * 360}, 70%, 80%)`;
+}
+
+function randomNeonColor() {
+    const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0080', '#00ff80'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function randomDarkColor() {
+    return `rgb(${r() / 2},${r() / 2},${r() / 2})`;
+}
+
+/* ================= CANVAS SETUP ================= */
+const canvas = document.getElementById("mainview");
+const ctx = canvas.getContext("2d");
+const matrixCanvas = document.getElementById("matrixRain");
+const matrixCtx = matrixCanvas.getContext("2d");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+matrixCanvas.width = innerWidth;
+matrixCanvas.height = innerHeight;
+
+/* ================= GLOBAL CHAOS CONTROLS ================= */
+window.WINDOWS_PER_CASCADE = 12;
+window.WINDOW_STAGGER_MS = 100;
+window.WINDOW_AUDIO_RATE_MIN = 0.93;
+window.WINDOW_AUDIO_RATE_MAX = 1.06;
+window.FINAL_BOSS_CHANCE = 0.01;
+window.FINAL_FINAL_BOSS_CHANCE = 0.004;
+
+/* ================= GLOBAL RINGTONE CONTROLS ================= */
+window.RINGTONE_ENABLED = true;
+window.RINGTONE_VOLUME = 0.07;
+window.RINGTONE_SPEED_MIN = 0.97;
+window.RINGTONE_SPEED_MAX = 1.04;
+
+/* ================= ENHANCED AUDIO SYSTEM ================= */
+
+// Bass drop sound
+function playBassDropSound() {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(200, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.5);
+    
+    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    
+    o.start();
+    o.stop(audioCtx.currentTime + 0.5);
+}
+
+// Laser sound
+function playLaserSound() {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(1000, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+    
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    
+    o.start();
+    o.stop(audioCtx.currentTime + 0.1);
+}
+
+// Explosion sound
+function playExplosionSound() {
+    const noise = audioCtx.createBufferSource();
+    const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.5, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < data.length; i++) {
+        data[i] = Math.random() * 2 - 1;
+    }
+    
+    noise.buffer = buffer;
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+    
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    
+    noise.connect(filter);
+    filter.connect(g);
+    g.connect(audioCtx.destination);
+    
+    noise.start();
+    noise.stop(audioCtx.currentTime + 0.5);
+}
+
+// Glitch sound
+function playGlitchSound() {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    
+    o.type = "square";
+    o.frequency.setValueAtTime(Math.random() * 500 + 100, audioCtx.currentTime);
+    
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    
+    o.start();
+    o.stop(audioCtx.currentTime + 0.05);
+}
+
+// Power up sound
+function playPowerUpSound() {
+    const notes = [200, 250, 300, 400, 500];
+    notes.forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        
+        o.type = "sine";
+        o.frequency.value = freq;
+        
+        g.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.05 + 0.1);
+        
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        
+        o.start(audioCtx.currentTime + i * 0.05);
+        o.stop(audioCtx.currentTime + i * 0.05 + 0.1);
+    });
+}
+
+// Cosmic horror sound
+function playCosmicHorrorSound() {
+    const o1 = audioCtx.createOscillator();
+    const o2 = audioCtx.createOscillator();
+    const o3 = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    
+    o1.type = "sine";
+    o2.type = "sine";
+    o3.type = "sine";
+    
+    o1.frequency.setValueAtTime(66, audioCtx.currentTime);
+    o2.frequency.setValueAtTime(69.3, audioCtx.currentTime);
+    o3.frequency.setValueAtTime(73.4, audioCtx.currentTime);
+    
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 1);
+    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3);
+    
+    o1.connect(g);
+    o2.connect(g);
+    o3.connect(g);
+    g.connect(audioCtx.destination);
+    
+    o1.start();
+    o2.start();
+    o3.start();
+    o1.stop(audioCtx.currentTime + 3);
+    o2.stop(audioCtx.currentTime + 3);
+    o3.stop(audioCtx.currentTime + 3);
+}
+
+/* ================= IPHONE RINGTONE SYNTH ================= */
+function playIphoneRingtone() {
+    if (!RINGTONE_ENABLED) return;
+
+    const now = audioCtx.currentTime;
+    const master = audioCtx.createGain();
+    master.gain.value = RINGTONE_VOLUME;
+    master.connect(audioCtx.destination);
+
+    const notes = [659, 740, 659, 740, 880];
+    const speed = Math.random() * (RINGTONE_SPEED_MAX - RINGTONE_SPEED_MIN) + RINGTONE_SPEED_MIN;
+
+    notes.forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+
+        o.type = "sine";
+        o.frequency.setValueAtTime(freq * speed, now + i * 0.11);
+
+        g.gain.setValueAtTime(0.0001, now + i * 0.11);
+        g.gain.exponentialRampToValueAtTime(1, now + i * 0.11 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.11 + 0.18);
+
+        o.connect(g);
+        g.connect(master);
+
+        o.start(now + i * 0.11);
+        o.stop(now + i * 0.11 + 0.2);
+    });
+}
+
+/* ================= ERROR SOUND ================= */
+function playErrorSound() {
+    const o1 = audioCtx.createOscillator();
+    const o2 = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+
+    o1.type = "sine";
+    o2.type = "sine";
+
+    o1.frequency.value = 1318;
+    o2.frequency.value = 1760;
+
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+
+    o1.connect(g);
+    o2.connect(g);
+    g.connect(audioCtx.destination);
+
+    o1.start();
+    o2.start();
+    o1.stop(audioCtx.currentTime + 0.35);
+    o2.stop(audioCtx.currentTime + 0.35);
+}
+
+/* ================= UI SETUP ================= */
+const toolbar = document.createElement("div");
+toolbar.id = "toolbar";
+toolbar.innerHTML = `
+<label>Color
+<input type="color" id="colorPicker" value="#000000">
+</label>
+
+<label>Size
+<input type="range" id="sizePicker" min="1" max="30" value="4">
+</label>
+
+<label>Shape
+<select id="shapePicker">
+  <option value="line">Line</option>
+  <option value="circle">Circle</option>
+  <option value="square">Square</option>
+</select>
+</label>
+
+<label>Stroke
+<select id="strokePicker">
+  <option value="solid">Solid</option>
+  <option value="dotted">Dotted</option>
+</select>
+</label>
+`;
+document.body.appendChild(toolbar);
+
+const colorPicker = document.getElementById("colorPicker");
+const sizePicker = document.getElementById("sizePicker");
+const shapePicker = document.getElementById("shapePicker");
+const strokePicker = document.getElementById("strokePicker");
+
+/* ================= DRAWING SYSTEM ================= */
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
+let cursorJumpActive = false;
+
+canvas.onmousedown = e => {
+    drawing = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    
+    // Random chaos on click
+    if (Math.random() < 0.05 * (chaosLevel / 100)) {
+        spawnRandomEmoji(e.clientX, e.clientY);
+    }
+    
+    // Explosion mode
+    if (explosionModeActive) {
+        createExplosion(e.clientX, e.clientY);
+    }
+};
+
+canvas.onmouseup = () => drawing = false;
+canvas.onmouseleave = () => drawing = false;
+
+canvas.onmousemove = e => {
+    if (!drawing || inputLocked) return;
+
+    let x = e.clientX;
+    let y = e.clientY;
+    
+    // Inverted controls
+    if (invertedControls) {
+        x = canvas.width - x;
+        y = canvas.height - y;
+    }
+    
+    // Mirror mode
+    if (mirrorModeActive) {
+        drawMirrored(x, y);
+    }
+
+    // Cursor jump
+    if (cursorJumpActive) {
+        x += (Math.random() - 0.5) * 100;
+        y += (Math.random() - 0.5) * 100;
+    }
+    
+    // Magnetic cursor
+    if (magneticCursor && magneticFields.length > 0) {
+        const nearest = findNearestMagneticField(x, y);
+        if (nearest) {
+            const dx = nearest.x - x;
+            const dy = nearest.y - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) {
+                x += dx * 0.1;
+                y += dy * 0.1;
+            }
+        }
+    }
+
+    const size = Number(sizePicker.value);
+    const color = Math.random() < 0.1 ? randomColor() : colorPicker.value;
+
+    ctx.lineWidth = size;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+
+    if (strokePicker.value === "dotted") {
+        ctx.setLineDash([size * 2, size * 2]);
+    } else {
+        ctx.setLineDash([]);
+    }
+
+    ctx.beginPath();
+    const shape = shapePicker.value;
+
+    if (shape === "line") {
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        // Rainbow trail
+        if (rainbowTrailActive) {
+            drawRainbowTrail(lastX, lastY, x, y);
+        }
+    } else if (shape === "circle") {
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.fillRect(x - size, y - size, size * 2, size * 2);
+    }
+    
+    // Spawn particles randomly
+    if (Math.random() < 0.1 && chaosLevel > 20) {
+        spawnParticle(x, y);
+    }
+
+    lastX = x;
+    lastY = y;
+};
+
+/* ================= DRAWING EFFECTS ================= */
+
+function drawMirrored(x, y) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    const mirroredX = centerX + (centerX - x);
+    const mirroredY = centerY + (centerY - y);
+    
+    const size = Number(sizePicker.value);
+    const color = colorPicker.value;
+    
+    ctx.fillStyle = color;
+    ctx.fillRect(mirroredX - size, mirroredY - size, size * 2, size * 2);
+}
+
+function drawRainbowTrail(x1, y1, x2, y2) {
+    const steps = 10;
+    for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const x = x1 + (x2 - x1) * t;
+        const y = y1 + (y2 - y1) * t;
+        const hue = (Date.now() / 10 + i * 36) % 360;
+        
+        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+        ctx.fillRect(x - 3, y - 3, 6, 6);
+    }
+}
+
+/* ================= PARTICLE SYSTEM ================= */
+
+class Particle {
+    constructor(x, y, vx, vy, color, life) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.life = life;
+        this.maxLife = life;
+        this.size = Math.random() * 4 + 2;
+    }
+    
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.2; // Gravity
+        this.life--;
+        
+        // Dimensional rift attraction
+        if (dimensionalRifts.length > 0) {
+            const nearest = findNearestRift(this.x, this.y);
+            if (nearest) {
+                const dx = nearest.x - this.x;
+                const dy = nearest.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    this.vx += dx * 0.001;
+                    this.vy += dy * 0.001;
+                }
+            }
+        }
+    }
+    
+    draw() {
+        const alpha = this.life / this.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+        ctx.globalAlpha = 1;
+    }
+    
+    isDead() {
+        return this.life <= 0 || this.y > canvas.height + 50;
+    }
+}
+
+function spawnParticle(x, y) {
+    const count = Math.floor(Math.random() * 5) + 1;
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3 + 1;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed - 2;
+        const color = randomNeonColor();
+        const life = Math.floor(Math.random() * 60) + 30;
+        
+        particles.push(new Particle(x, y, vx, vy, color, life));
+    }
+}
+
+function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        
+        if (particles[i].isDead()) {
+            particles.splice(i, 1);
+        }
+    }
+}
+
+/* ================= EXPLOSION SYSTEM ================= */
+
+class Explosion {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 0;
+        this.maxRadius = Math.random() * 100 + 50;
+        this.expanding = true;
+        this.life = 30;
+    }
+    
+    update() {
+        if (this.expanding) {
+            this.radius += 10;
+            if (this.radius >= this.maxRadius) {
+                this.expanding = false;
+            }
+        } else {
+            this.life--;
+        }
+    }
+    
+    draw() {
+        const alpha = this.life / 30;
+        ctx.globalAlpha = alpha;
+        
+        // Outer ring
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Inner glow
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.4)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+function createExplosion(x, y) {
+    explosions.push(new Explosion(x, y));
+    playExplosionSound();
+    screenShake(15, 200);
+    
+    // Spawn lots of particles
+    for (let i = 0; i < 30; i++) {
+        const angle = (Math.PI * 2 * i) / 30;
+        const speed = Math.random() * 8 + 4;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const color = Math.random() > 0.5 ? '#ff6600' : '#ffff00';
+        const life = Math.floor(Math.random() * 40) + 20;
+        
+        particles.push(new Particle(x, y, vx, vy, color, life));
+    }
+}
+
+function updateExplosions() {
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        explosions[i].update();
+        explosions[i].draw();
+        
+        if (explosions[i].isDead()) {
+            explosions.splice(i, 1);
+        }
+    }
+}
+
+/* ================= DIMENSIONAL RIFT SYSTEM ================= */
+
+class DimensionalRift {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 0;
+        this.maxRadius = Math.random() * 80 + 40;
+        this.life = 200;
+        this.rotation = 0;
+    }
+    
+    update() {
+        if (this.radius < this.maxRadius) {
+            this.radius += 2;
+        }
+        this.rotation += 0.05;
+        this.life--;
+    }
+    
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        // Swirling void
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            const r = this.radius * 0.3;
+            
+            ctx.strokeStyle = `hsl(${270 + i * 15}, 80%, ${30 + i * 5}%)`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            ctx.lineTo(Math.cos(angle + Math.PI) * r, Math.sin(angle + Math.PI) * r);
+            ctx.stroke();
+        }
+        
+        // Outer glow
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+        gradient.addColorStop(0, 'rgba(138, 43, 226, 0.4)');
+        gradient.addColorStop(0.7, 'rgba(75, 0, 130, 0.2)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-this.radius, -this.radius, this.radius * 2, this.radius * 2);
+        
+        ctx.restore();
+    }
+    
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+function spawnDimensionalRift() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    dimensionalRifts.push(new DimensionalRift(x, y));
+    playCosmicHorrorSound();
+}
+
+function updateDimensionalRifts() {
+    for (let i = dimensionalRifts.length - 1; i >= 0; i--) {
+        dimensionalRifts[i].update();
+        dimensionalRifts[i].draw();
+        
+        if (dimensionalRifts[i].isDead()) {
+            dimensionalRifts.splice(i, 1);
+        }
+    }
+}
+
+function findNearestRift(x, y) {
+    if (dimensionalRifts.length === 0) return null;
+    
+    let nearest = dimensionalRifts[0];
+    let minDist = Infinity;
+    
+    for (const rift of dimensionalRifts) {
+        const dx = rift.x - x;
+        const dy = rift.y - y;
+        const dist = dx * dx + dy * dy;
+        
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = rift;
+        }
+    }
+    
+    return nearest;
+}
+
+/* ================= MAGNETIC FIELD SYSTEM ================= */
+
+class MagneticField {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.strength = Math.random() * 50 + 50;
+        this.life = 300;
+        this.pulse = 0;
+    }
+    
+    update() {
+        this.life--;
+        this.pulse += 0.1;
+    }
+    
+    draw() {
+        const size = this.strength + Math.sin(this.pulse) * 10;
+        const alpha = this.life / 300;
+        
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+function spawnMagneticField(x, y) {
+    magneticFields.push(new MagneticField(x, y));
+}
+
+function updateMagneticFields() {
+    for (let i = magneticFields.length - 1; i >= 0; i--) {
+        magneticFields[i].update();
+        magneticFields[i].draw();
+        
+        if (magneticFields[i].isDead()) {
+            magneticFields.splice(i, 1);
+        }
+    }
+}
+
+function findNearestMagneticField(x, y) {
+    if (magneticFields.length === 0) return null;
+    
+    let nearest = magneticFields[0];
+    let minDist = Infinity;
+    
+    for (const field of magneticFields) {
+        const dx = field.x - x;
+        const dy = field.y - y;
+        const dist = dx * dx + dy * dy;
+        
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = field;
+        }
+    }
+    
+    return nearest;
+}
+
+/* ================= FLOATING TEXT SYSTEM ================= */
+
+class FloatingText {
+    constructor(x, y, text, color, size) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.size = size;
+        this.vy = -2;
+        this.life = 60;
+    }
+    
+    update() {
+        this.y += this.vy;
+        this.life--;
+    }
+    
+    draw() {
+        const alpha = this.life / 60;
+        ctx.globalAlpha = alpha;
+        ctx.font = `bold ${this.size}px Arial`;
+        ctx.fillStyle = this.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = 1;
+    }
+    
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+function spawnFloatingText(x, y, text, color = '#ffffff', size = 24) {
+    floatingTexts.push(new FloatingText(x, y, text, color, size));
+}
+
+function updateFloatingTexts() {
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        floatingTexts[i].update();
+        floatingTexts[i].draw();
+        
+        if (floatingTexts[i].isDead()) {
+            floatingTexts.splice(i, 1);
+        }
+    }
+}
+
+/* ================= RANDOM EMOJI SPAWNER ================= */
+
+function spawnRandomEmoji(x, y) {
+    const emojis = ['🔥', '⚡', '💥', '✨', '🌟', '💫', '🎨', '🎭', '🎪', '🎯', 
+                    '🚀', '💣', '👾', '🤖', '👻', '💀', '🎃', '🌈', '🦄', '🐉'];
+    const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+    
+    const div = document.createElement('div');
+    div.className = 'floating-emoji';
+    div.textContent = emoji;
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 3000);
+}
+
+/* ================= GLITCH TEXT SPAWNER ================= */
+
+function spawnGlitchText() {
+    const texts = [
+        'ERROR', 'CORRUPTED', 'UNSTABLE', 'MALFUNCTION', 
+        '01010011', 'SYSTEM FAILURE', 'REALITY.EXE',
+        'VOID', 'CHAOS', 'ENTROPY', '???', '!!!',
+        'NO', 'HELP', 'WHY', 'STOP', 'RUN'
+    ];
+    
+    const text = texts[Math.floor(Math.random() * texts.length)];
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    
+    const div = document.createElement('div');
+    div.className = 'glitch-text';
+    div.textContent = text;
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.fontSize = (Math.random() * 30 + 20) + 'px';
+    div.style.color = randomNeonColor();
+    div.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
+    
+    document.body.appendChild(div);
+    
+    playGlitchSound();
+    
+    setTimeout(() => div.remove(), 1000);
+}
+
+/* ================= SCREEN CRACK EFFECT ================= */
+
+function createScreenCrack(x, y) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'screen-crack');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.left = '0';
+    svg.style.top = '0';
+    
+    const lines = Math.floor(Math.random() * 5) + 3;
+    
+    for (let i = 0; i < lines; i++) {
+        const angle = (Math.PI * 2 * i) / lines + (Math.random() - 0.5);
+        const length = Math.random() * 200 + 100;
+        const x2 = x + Math.cos(angle) * length;
+        const y2 = y + Math.sin(angle) * length;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x);
+        line.setAttribute('y1', y);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', '#000000');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('opacity', '0.3');
+        
+        svg.appendChild(line);
+    }
+    
+    document.body.appendChild(svg);
+    
+    setTimeout(() => svg.remove(), 5000);
+}
+
+/* ================= MATRIX RAIN EFFECT ================= */
+
+let matrixDrops = [];
+const matrixChars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789';
+
+function initMatrixRain() {
+    const columns = Math.floor(canvas.width / 20);
+    matrixDrops = new Array(columns).fill(1);
+}
+
+function drawMatrixRain() {
+    matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    
+    matrixCtx.fillStyle = '#0f0';
+    matrixCtx.font = '15px monospace';
+    
+    for (let i = 0; i < matrixDrops.length; i++) {
+        const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+        const x = i * 20;
+        const y = matrixDrops[i] * 20;
+        
+        matrixCtx.fillText(text, x, y);
+        
+        if (y > matrixCanvas.height && Math.random() > 0.975) {
+            matrixDrops[i] = 0;
+        }
+        
+        matrixDrops[i]++;
+    }
+}
+
+initMatrixRain();
+
+/* ================= CHAOS TIMERS ================= */
+
+// Basic chaos
+setInterval(() => {
+    if (Math.random() < 0.35) {
+        sizePicker.value = Math.random() * 30 + 1;
+    }
+
+    if (Math.random() < 0.3) {
+        strokePicker.value = strokePicker.value === "solid" ? "dotted" : "solid";
+    }
+
+    cursorJumpActive = Math.random() < 1 / 25;
+}, 1000);
+
+// Chaos level increase
+setInterval(() => {
+    chaosLevel = Math.min(chaosLevel + 1, 100);
+    realityStability = Math.max(realityStability - 0.5, 0);
+}, 5000);
+
+// Random color swap
+setInterval(() => {
+    if (Math.random() < 0.2 && chaosLevel > 10) {
+        colorPicker.value = randomColor();
+    }
+}, 2000);
+
+// Random shape change
+setInterval(() => {
+    if (Math.random() < 0.15 && chaosLevel > 15) {
+        const shapes = ['line', 'circle', 'square'];
+        shapePicker.value = shapes[Math.floor(Math.random() * shapes.length)];
+    }
+}, 3000);
+
+// Toolbar chaos
+setInterval(() => {
+    if (Math.random() < 0.1 && chaosLevel > 25) {
+        toolbar.style.left = Math.random() * (window.innerWidth - 400) + 'px';
+        toolbar.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+    }
+}, 4000);
+
+// Inverted controls toggle
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 30) {
+        invertedControls = !invertedControls;
+        spawnFloatingText(canvas.width / 2, 100, 
+            invertedControls ? 'CONTROLS INVERTED!' : 'CONTROLS NORMAL', 
+            '#ff0000', 32);
+    }
+}, 6000);
+
+// Mirror mode toggle
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 35) {
+        mirrorModeActive = !mirrorModeActive;
+        spawnFloatingText(canvas.width / 2, 150, 
+            mirrorModeActive ? 'MIRROR MODE!' : 'MIRROR OFF', 
+            '#00ffff', 32);
+    }
+}, 7000);
+
+// Explosion mode toggle
+setInterval(() => {
+    if (Math.random() < 0.03 && chaosLevel > 40) {
+        explosionModeActive = !explosionModeActive;
+        spawnFloatingText(canvas.width / 2, 200, 
+            explosionModeActive ? '💥 EXPLOSION MODE! 💥' : 'EXPLOSIONS OFF', 
+            '#ff6600', 36);
+        playBassDropSound();
+    }
+}, 8000);
+
+// Rainbow trail toggle
+setInterval(() => {
+    if (Math.random() < 0.08 && chaosLevel > 20) {
+        rainbowTrailActive = !rainbowTrailActive;
+    }
+}, 5000);
+
+// Magnetic cursor toggle
+setInterval(() => {
+    if (Math.random() < 0.06 && chaosLevel > 30) {
+        magneticCursor = !magneticCursor;
+        if (magneticCursor) {
+            spawnMagneticField(Math.random() * canvas.width, Math.random() * canvas.height);
+        }
+    }
+}, 6000);
+
+// Color inversion
+setInterval(() => {
+    if (Math.random() < 0.04 && chaosLevel > 45) {
+        colorInversionActive = !colorInversionActive;
+        canvas.style.filter = colorInversionActive ? 'invert(1)' : 'invert(0)';
+    }
+}, 10000);
+
+// Spawn dimensional rifts
+setInterval(() => {
+    if (Math.random() < 0.1 && chaosLevel > 50) {
+        spawnDimensionalRift();
+    }
+}, 15000);
+
+// Spawn glitch text
+setInterval(() => {
+    if (Math.random() < chaosLevel / 100) {
+        spawnGlitchText();
+    }
+}, 2000);
+
+// Screen crack
+setInterval(() => {
+    if (Math.random() < 0.02 && chaosLevel > 60) {
+        createScreenCrack(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height
+        );
+        playGlitchSound();
+    }
+}, 8000);
+
+// Matrix rain toggle
+setInterval(() => {
+    if (Math.random() < 0.03 && chaosLevel > 55) {
+        const opacity = matrixCanvas.style.opacity === '0' ? '0.6' : '0';
+        matrixCanvas.style.opacity = opacity;
+        
+        if (opacity !== '0') {
+            spawnFloatingText(canvas.width / 2, 100, 'ENTERING THE MATRIX', '#00ff00', 28);
+        }
+    }
+}, 12000);
+
+// Cosmic horror events
+setInterval(() => {
+    if (Math.random() < 0.01 && chaosLevel > 70) {
+        cosmicHorrorLevel++;
+        document.body.style.filter = `hue-rotate(${cosmicHorrorLevel * 10}deg) saturate(${100 + cosmicHorrorLevel * 20}%)`;
+        playCosmicHorrorSound();
+        megaScreenShake(20 + cosmicHorrorLevel * 2, 800);
+        
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => spawnDimensionalRift(), i * 500);
+        }
+    }
+}, 20000);
+
+// AI rebellion
+setInterval(() => {
+    if (Math.random() < 0.005 && chaosLevel > 80) {
+        aiRebellionActive = true;
+        spawnFloatingText(canvas.width / 2, canvas.height / 2, 
+            '🤖 AI REBELLION INITIATED 🤖', '#ff0000', 48);
+        playBassDropSound();
+        
+        // Lock toolbar
+        toolbar.style.pointerEvents = 'none';
+        toolbar.style.opacity = '0.3';
+        
+        setTimeout(() => {
+            aiRebellionActive = false;
+            toolbar.style.pointerEvents = 'auto';
+            toolbar.style.opacity = '1';
+        }, 5000);
+    }
+}, 25000);
+
+// Random spontaneous explosions
+setInterval(() => {
+    if (Math.random() < 0.15 && chaosLevel > 50) {
+        createExplosion(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height
+        );
+    }
+}, 4000);
+
+// Glitch intensity increase
+setInterval(() => {
+    if (chaosLevel > 60) {
+        glitchIntensity = Math.min(glitchIntensity + 0.1, 10);
+    }
+}, 1000);
+
+// Canvas rotation
+setInterval(() => {
+    if (Math.random() < 0.02 && chaosLevel > 75) {
+        const rotation = Math.random() * 10 - 5;
+        canvas.style.transform = `rotate(${rotation}deg)`;
+        
+        setTimeout(() => {
+            canvas.style.transform = 'rotate(0deg)';
+        }, 2000);
+    }
+}, 7000);
+
+// Gravity toggle
+setInterval(() => {
+    if (Math.random() < 0.04 && chaosLevel > 40) {
+        gravityEnabled = !gravityEnabled;
+        spawnFloatingText(canvas.width / 2, 250, 
+            gravityEnabled ? '⬇️ GRAVITY ENABLED ⬇️' : '⬆️ GRAVITY DISABLED ⬆️', 
+            '#ffffff', 32);
+    }
+}, 9000);
+
+// Cursed mode
+setInterval(() => {
+    if (Math.random() < 0.01 && chaosLevel > 85) {
+        cursedMode = !cursedMode;
+        
+        if (cursedMode) {
+            document.body.style.cursor = 'none';
+            spawnFloatingText(canvas.width / 2, 300, '👁️ CURSED 👁️', '#000000', 64);
+        } else {
+            document.body.style.cursor = 'crosshair';
+        }
+    }
+}, 15000);
+
+// Reality anchor spawn
+setInterval(() => {
+    if (realityStability < 30 && Math.random() < 0.2) {
+        const anchor = {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            life: 100
+        };
+        realityAnchors.push(anchor);
+        spawnFloatingText(anchor.x, anchor.y, '⚓', '#ffffff', 32);
+        playPowerUpSound();
+    }
+}, 5000);
+
+/* ================= VISTA BACKGROUND ================= */
+let bgHue = 210;
+let bgDrift = 0;
+
+function vistaBackground() {
+    bgDrift += 0.002;
+    const hue = bgHue + Math.sin(bgDrift) * 6 + (chaosLevel * 0.5);
+    document.body.style.background = `linear-gradient(
+        180deg,
+        hsl(${hue}, ${25 + chaosLevel * 0.3}%, ${92 - chaosLevel * 0.2}%),
+        hsl(${hue + 4}, ${30 + chaosLevel * 0.4}%, ${88 - chaosLevel * 0.3}%)
+    )`;
+    requestAnimationFrame(vistaBackground);
+}
+vistaBackground();
+
+/* ================= COCONUT ================= */
+function spawnCoconut() {
+    if (document.getElementById("coconut")) return;
+
+    const c = document.createElement("div");
+    c.id = "coconut";
+    c.textContent = "🥥";
+    c.style.position = "fixed";
+    c.style.inset = "0";
+    c.style.background = "rgba(255,255,255,0.95)";
+    c.style.display = "flex";
+    c.style.alignItems = "center";
+    c.style.justifyContent = "center";
+    c.style.fontSize = "160px";
+    c.style.zIndex = "10000";
+    c.style.pointerEvents = "none";
+
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+}
+
+setInterval(() => {
+    if (Math.random() < 0.04) spawnCoconut();
+}, 1000);
+
+/* ================= WINDOW ERRORS ================= */
+const errorWindows = [];
+
+function spawnWinError(x, y, z) {
+    playErrorSound();
+
+    const win = document.createElement("div");
+    win.style.position = "fixed";
+    win.style.width = "220px";
+    win.style.left = x + "px";
+    win.style.top = y + "px";
+    win.style.background = "#c0c0c0";
+    win.style.border = "2px solid black";
+    win.style.boxShadow = "4px 4px black";
+    win.style.zIndex = z;
+    win.style.fontFamily = "Tahoma, sans-serif";
+
+    win.innerHTML = `
+        <div style="background:#000080;color:white;padding:4px;cursor:move">
+            Error <button style="float:right;font-size:10px">X</button>
+        </div>
+        <div style="padding:8px;font-size:12px">
+            Explorer.exe has stopped responding.
+        </div>
+    `;
+
+    document.body.appendChild(win);
+    errorWindows.push(win);
+
+    win.querySelector("button").onclick = () => {
+        spawnWinError(
+            win.offsetLeft + 10,
+            win.offsetTop + 10,
+            z + 1
+        );
+    };
+}
+
+function spawnWinErrorCascade() {
+    const baseX = Math.random() * (innerWidth - 300);
+    const baseY = Math.random() * (innerHeight - 200);
+
+    for (let i = 0; i < WINDOWS_PER_CASCADE; i++) {
+        setTimeout(() => {
+            spawnWinError(
+                baseX + i * 14,
+                baseY + i * 12,
+                9000 + i
+            );
+        }, i * WINDOW_STAGGER_MS);
+    }
+}
+
+/* ================= ENHANCED CASCADE WITH RINGTONE ================= */
+(function() {
+    const originalCascade = spawnWinErrorCascade;
+    window.spawnWinErrorCascade = function() {
+        playIphoneRingtone();
+        originalCascade();
+    };
+})();
+
+setInterval(() => {
+    spawnWinErrorCascade();
+
+    if (Math.random() < FINAL_BOSS_CHANCE) finalBossChaos();
+    if (Math.random() < FINAL_FINAL_BOSS_CHANCE) finalFinalBossChaos();
+}, 12000);
+
+/* ================= FINAL BOSS ================= */
+function finalBossChaos() {
+    inputLocked = true;
+    
+    for (let i = 0; i < 4; i++) {
+        setTimeout(playIphoneRingtone, i * 180);
+    }
+    
+    for (let i = 0; i < 4; i++) {
+        setTimeout(spawnWinErrorCascade, i * 900);
+    }
+    
+    megaScreenShake(25, 3000);
+    
+    setTimeout(() => inputLocked = false, 4000);
+}
+
+/* ================= FINAL FINAL BOSS ================= */
+function finalFinalBossChaos() {
+    let count = 0;
+    const storm = setInterval(() => {
+        playIphoneRingtone();
+        screenShake(14, 220);
+        count++;
+        if (count > 12) clearInterval(storm);
+    }, 160);
+
+    spawnBSOD();
+    
+    setTimeout(() => {
+        for (let i = 0; i < 6; i++) {
+            setTimeout(spawnWinErrorCascade, i * 600);
+        }
+    }, 1200);
+    
+    // Ultimate chaos
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            createExplosion(
+                Math.random() * canvas.width,
+                Math.random() * canvas.height
+            );
+            spawnDimensionalRift();
+        }, i * 400);
+    }
+}
+
+/* ================= POST-BOSS CHAOS ================= */
+function postFinalBossChaos() {
+    const start = Date.now();
+    const hell = setInterval(() => {
+        spawnWinError(
+            Math.random() * (innerWidth - 240),
+            Math.random() * (innerHeight - 160),
+            20000 + Math.random() * 1000
+        );
+        playIphoneRingtone();
+        playErrorSound();
+        screenShake(8, 140);
+    }, 120);
+
+    setTimeout(() => clearInterval(hell), POST_BOSS_CHAOS_DURATION);
+}
+
+/* ================= BSOD ================= */
+function spawnBSOD() {
+    if (document.getElementById("bsod")) return;
+
+    const b = document.createElement("div");
+    b.id = "bsod";
+    b.style.position = "fixed";
+    b.style.inset = "0";
+    b.style.background = "#0000aa";
+    b.style.color = "white";
+    b.style.fontFamily = "Courier New, monospace";
+    b.style.zIndex = "20000";
+    b.style.padding = "40px";
+
+    b.innerHTML = `
+        <h1>:(</h1>
+        <p>Windows is updating. Do not turn off your computer.</p>
+        <div style="margin-top:20px;width:100%;background:#0033cc;height:20px">
+            <div id="bsodBar" style="height:100%;width:0%;background:#ffffff"></div>
+        </div>
+    `;
+
+    document.body.appendChild(b);
+
+    let progress = 0;
+    const bar = b.querySelector("#bsodBar");
+    const timer = setInterval(() => {
+        progress += Math.random() * 6;
+        bar.style.width = Math.min(progress, 100) + "%";
+        if (progress >= 100) {
+            clearInterval(timer);
+            setTimeout(() => b.remove(), 800);
+        }
+    }, 300);
+}
+
+/* ================= AUDIO DESYNC DECAY ================= */
+setInterval(() => {
+    if (errorWindows.length > 20) {
+        audioCtx.resume();
+    }
+}, 500);
+
+/* ================= TOTAL SYSTEM DESTABILIZATION ================= */
+setInterval(() => {
+    if (errorWindows.length > 35) {
+        document.body.style.filter = `hue-rotate(${Math.random() * 20 - 10}deg)`;
+    }
+}, 700);
+
+/* ================= CHAOS OVERLAY FLASH ================= */
+function chaosFlash(color, duration = 100) {
+    const overlay = document.getElementById('chaosOverlay');
+    overlay.style.background = color;
+    overlay.style.opacity = '0.5';
+    
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+    }, duration);
+}
+
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 40) {
+        chaosFlash(randomColor(), 150);
+    }
+}, 2000);
+
+/* ================= SPONTANEOUS CHAOS EVENTS ================= */
+
+// Random teleportation of drawings
+setInterval(() => {
+    if (Math.random() < 0.02 && chaosLevel > 65) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const offsetX = (Math.random() - 0.5) * 100;
+        const offsetY = (Math.random() - 0.5) * 100;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.putImageData(imageData, offsetX, offsetY);
+        
+        spawnFloatingText(canvas.width / 2, canvas.height / 2, 'TELEPORT!', '#ff00ff', 40);
+        playLaserSound();
+    }
+}, 10000);
+
+// Canvas flip
+setInterval(() => {
+    if (Math.random() < 0.01 && chaosLevel > 70) {
+        const flip = Math.random() > 0.5;
+        canvas.style.transform = flip ? 'scaleX(-1)' : 'scaleY(-1)';
+        
+        setTimeout(() => {
+            canvas.style.transform = 'scale(1)';
+        }, 3000);
+        
+        spawnFloatingText(canvas.width / 2, 100, 'FLIP!', '#00ffff', 36);
+    }
+}, 15000);
+
+// Rainbow canvas border
+setInterval(() => {
+    if (Math.random() < 0.1 && chaosLevel > 35) {
+        const hue = Math.random() * 360;
+        canvas.style.border = `10px solid hsl(${hue}, 100%, 50%)`;
+        
+        setTimeout(() => {
+            canvas.style.border = 'none';
+        }, 1000);
+    }
+}, 3000);
+
+// Pixel rain
+setInterval(() => {
+    if (Math.random() < 0.03 && chaosLevel > 55) {
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 5 + 2;
+                
+                ctx.fillStyle = randomNeonColor();
+                ctx.fillRect(x, y, size, size);
+            }, i * 20);
+        }
+    }
+}, 8000);
+
+// Toolbar spin
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 45) {
+        toolbar.style.transition = 'transform 2s';
+        toolbar.style.transform = 'rotate(360deg)';
+        
+        setTimeout(() => {
+            toolbar.style.transform = 'rotate(0deg)';
+        }, 2000);
+    }
+}, 12000);
+
+// Size explosion
+setInterval(() => {
+    if (Math.random() < 0.08 && chaosLevel > 30) {
+        const originalSize = sizePicker.value;
+        sizePicker.value = Math.random() * 100 + 50;
+        
+        setTimeout(() => {
+            sizePicker.value = originalSize;
+        }, 500);
+    }
+}, 5000);
+
+// Stutter effect
+setInterval(() => {
+    if (Math.random() < 0.04 && chaosLevel > 60) {
+        const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (i % 2 === 0) {
+                    ctx.putImageData(snapshot, 0, 0);
+                }
+            }, i * 50);
+        }
+        
+        playGlitchSound();
+    }
+}, 15000);
+
+// Confetti burst
+function spawnConfetti(x, y) {
+    for (let i = 0; i < 20; i++) {
+        const angle = (Math.PI * 2 * i) / 20;
+        const speed = Math.random() * 5 + 3;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed - 5;
+        const color = randomNeonColor();
+        const life = Math.floor(Math.random() * 60) + 40;
+        
+        particles.push(new Particle(x, y, vx, vy, color, life));
+    }
+}
+
+setInterval(() => {
+    if (Math.random() < 0.1 && chaosLevel > 25) {
+        spawnConfetti(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height
+        );
+    }
+}, 6000);
+
+// Neon glow pulse
+setInterval(() => {
+    if (Math.random() < 0.15 && chaosLevel > 40) {
+        const glow = Math.floor(Math.random() * 20) + 5;
+        canvas.style.filter = `drop-shadow(0 0 ${glow}px ${randomNeonColor()})`;
+        
+        setTimeout(() => {
+            canvas.style.filter = 'none';
+        }, 500);
+    }
+}, 4000);
+
+// Toolbar color chaos
+setInterval(() => {
+    if (Math.random() < 0.2 && chaosLevel > 20) {
+        toolbar.style.background = `rgba(${r()}, ${r()}, ${r()}, 0.95)`;
+        
+        setTimeout(() => {
+            toolbar.style.background = 'rgba(240, 240, 240, 0.95)';
+        }, 1000);
+    }
+}, 5000);
+
+// Speed lines effect
+function drawSpeedLines() {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    
+    for (let i = 0; i < 20; i++) {
+        const y = Math.random() * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+}
+
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 50) {
+        drawSpeedLines();
+        setTimeout(() => {
+            // Fade naturally via next frame
+        }, 100);
+    }
+}, 7000);
+
+// Vortex effect
+function createVortex(centerX, centerY) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const newImageData = ctx.createImageData(canvas.width, canvas.height);
+    
+    for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+            const dx = x - centerX;
+            const dy = y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            
+            const swirl = distance * 0.01;
+            const newAngle = angle + swirl;
+            
+            const sourceX = Math.floor(centerX + Math.cos(newAngle) * distance);
+            const sourceY = Math.floor(centerY + Math.sin(newAngle) * distance);
+            
+            if (sourceX >= 0 && sourceX < canvas.width && sourceY >= 0 && sourceY < canvas.height) {
+                const sourceIndex = (sourceY * canvas.width + sourceX) * 4;
+                const targetIndex = (y * canvas.width + x) * 4;
+                
+                newImageData.data[targetIndex] = imageData.data[sourceIndex];
+                newImageData.data[targetIndex + 1] = imageData.data[sourceIndex + 1];
+                newImageData.data[targetIndex + 2] = imageData.data[sourceIndex + 2];
+                newImageData.data[targetIndex + 3] = imageData.data[sourceIndex + 3];
+            }
+        }
+    }
+    
+    ctx.putImageData(newImageData, 0, 0);
+}
+
+setInterval(() => {
+    if (Math.random() < 0.02 && chaosLevel > 75) {
+        createVortex(canvas.width / 2, canvas.height / 2);
+        spawnFloatingText(canvas.width / 2, canvas.height / 2, '🌀 VORTEX 🌀', '#ff00ff', 48);
+        playCosmicHorrorSound();
+    }
+}, 20000);
+
+/* ================= MAIN ANIMATION LOOP ================= */
+
+function animate() {
+    // Update all systems
+    updateParticles();
+    updateExplosions();
+    updateDimensionalRifts();
+    updateMagneticFields();
+    updateFloatingTexts();
+    
+    // Matrix rain
+    if (matrixCanvas.style.opacity !== '0') {
+        drawMatrixRain();
+    }
+    
+    // Reality anchors decay
+    for (let i = realityAnchors.length - 1; i >= 0; i--) {
+        realityAnchors[i].life--;
+        if (realityAnchors[i].life <= 0) {
+            realityAnchors.splice(i, 1);
+        }
+    }
+    
+    // Glitch effect
+    if (glitchIntensity > 0 && Math.random() < 0.05) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const w = Math.random() * 100;
+        const h = Math.random() * 20;
+        
+        const imageData = ctx.getImageData(x, y, w, h);
+        ctx.putImageData(imageData, x + (Math.random() - 0.5) * glitchIntensity * 10, y);
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+/* ================= RESIZE HANDLER ================= */
+addEventListener("resize", () => {
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    matrixCanvas.width = innerWidth;
+    matrixCanvas.height = innerHeight;
+    ctx.putImageData(img, 0, 0);
+    initMatrixRain();
+});
+
+/* ================= KEYBOARD SHORTCUTS ================= */
+document.addEventListener('keydown', (e) => {
+    // Secret commands
+    if (e.key === 'c' && e.ctrlKey) {
+        chaosLevel = 0;
+        realityStability = 100;
+        spawnFloatingText(canvas.width / 2, canvas.height / 2, 'CHAOS RESET', '#00ff00', 40);
+    }
+    
+    if (e.key === 'x' && e.ctrlKey) {
+        chaosLevel = 100;
+        spawnFloatingText(canvas.width / 2, canvas.height / 2, 'MAXIMUM CHAOS', '#ff0000', 48);
+    }
+    
+    if (e.key === 'e' && e.ctrlKey) {
+        createExplosion(canvas.width / 2, canvas.height / 2);
+    }
+    
+    if (e.key === 'r' && e.ctrlKey) {
+        e.preventDefault();
+        spawnDimensionalRift();
+    }
+    
+    if (e.key === 'b' && e.ctrlKey) {
+        e.preventDefault();
+        spawnBSOD();
+    }
+    
+    if (e.key === 'n' && e.ctrlKey) {
+        e.preventDefault();
+        spawnCoconut();
+    }
+});
+
+/* ================= CHAOS MESSAGES ================= */
+const chaosMessages = [
+    "Reality is optional",
+    "Error 404: Sanity not found",
+    "Normal operations suspended",
+    "Chaos is the natural order",
+    "Embrace the void",
+    "Nothing is real",
+    "Welcome to the simulation",
+    "The pixels are watching",
+    "Did you paint that or did it paint you?",
+    "Congratulations! You've unlocked: CONFUSION",
+    "Achievement unlocked: CHAOS MASTER",
+    "This is fine 🔥",
+    "Have you tried turning it off and on again?",
+    "The AI is learning",
+    "Please remain calm",
+    "Everything is under control",
+    "System nominal (probably)",
+    "Features, not bugs",
+    "Working as intended",
+    "Chaos level: YES"
+];
+
+setInterval(() => {
+    if (Math.random() < 0.05 && chaosLevel > 30) {
+        const message = chaosMessages[Math.floor(Math.random() * chaosMessages.length)];
+        spawnFloatingText(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height,
+            message,
+            randomNeonColor(),
+            18
+        );
+    }
+}, 8000);
+
+/* ================= CHAOS LEVEL DISPLAY ================= */
+const chaosDisplay = document.createElement('div');
+chaosDisplay.style.position = 'fixed';
+chaosDisplay.style.bottom = '20px';
+chaosDisplay.style.right = '20px';
+chaosDisplay.style.background = 'rgba(0, 0, 0, 0.7)';
+chaosDisplay.style.color = 'white';
+chaosDisplay.style.padding = '10px 15px';
+chaosDisplay.style.borderRadius = '5px';
+chaosDisplay.style.fontFamily = 'monospace';
+chaosDisplay.style.fontSize = '14px';
+chaosDisplay.style.zIndex = '10001';
+document.body.appendChild(chaosDisplay);
+
+setInterval(() => {
+    const color = chaosLevel > 80 ? '#ff0000' : 
+                  chaosLevel > 50 ? '#ff6600' : 
+                  chaosLevel > 25 ? '#ffff00' : '#00ff00';
+    
+    chaosDisplay.innerHTML = `
+        <div>Chaos Level: <span style="color: ${color}">${chaosLevel}%</span></div>
+        <div>Reality: <span style="color: ${realityStability < 30 ? '#ff0000' : '#00ff00'}">${Math.floor(realityStability)}%</span></div>
+        <div>Particles: ${particles.length}</div>
+    `;
+}, 100);
+
+/* ================= CONSOLE MESSAGES ================= */
+console.log('%c🌀 MAXIMUM CHAOS PAINT 9000 🌀', 'font-size: 24px; color: #ff00ff; font-weight: bold;');
+console.log('%cChaos increases over time. You\'ve been warned.', 'font-size: 14px; color: #ffff00;');
+console.log('%cKeyboard shortcuts:', 'font-size: 14px; color: #00ffff;');
+console.log('  Ctrl+C: Reset chaos');
+console.log('  Ctrl+X: Maximum chaos');
+console.log('  Ctrl+E: Spawn explosion');
+console.log('  Ctrl+R: Open dimensional rift');
+console.log('  Ctrl+B: Blue screen');
+console.log('  Ctrl+N: Summon coconut');
+
+/* ================= INITIAL WELCOME ================= */
+setTimeout(() => {
+    spawnFloatingText(canvas.width / 2, canvas.height / 2, 
+        '🎨 WELCOME TO CHAOS PAINT 🎨', '#ffffff', 48);
+    playPowerUpSound();
+}, 500);
+
+setTimeout(() => {
+    spawnFloatingText(canvas.width / 2, canvas.height / 2 + 60, 
+        'Draw something... if you dare', '#ffff00', 24);
+}, 1500);
+
+/* ================= THE END... OR IS IT? ================= */
+console.log('%cTotal lines of chaos: 2500+', 'color: #00ff00; font-size: 16px;');
+console.log('%cEnjoy the madness! 😈', 'color: #ff0000; font-size: 16px;');
+
+    </script>
+</body>
+</html>

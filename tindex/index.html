@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Game Is Lying To You</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="ui">
+    Dots: <span id="dots">0</span> / 200
+    <button id="reset">Reset</button>
+  </div>
+
+  <!-- DEATH OVERLAY -->
+  <div id="death">
+    <h1>You fell.</h1>
+    <p>Your progress can be preserved.</p>
+
+    <button id="watchAd">Watch a random meme to respawn</button>
+    <button id="hardReset">Restart from zero</button>
+
+    <div id="videoContainer">
+      <img id="memeImg" width="560" height="315" />
+      <p id="timer">Respawn available in 15</p>
+    </div>
+  </div>
+
+  <div id="win">
+    <h1>You were not expected to win.</h1>
+    <p>200 dots collected.</p>
+    <button onclick="resetGame()">Play Again</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
