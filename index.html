@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Swear It Worked Before</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap');
+
+  :root {
+    --vista-blue: #0040a0;
+    --vista-light: #4a90d9;
+    --vista-glass: rgba(180,210,255,0.18);
+    --vista-shine: rgba(255,255,255,0.55);
+    --aero-border: rgba(100,160,255,0.45);
+    --taskbar: #1a3a6e;
+    --bg1: #0a1a3a;
+    --bg2: #1a3a7a;
+    --score-color: #7ee8fa;
+    --title-glow: #5ab4ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(ellipse at 60% 30%, #1a4a9a 0%, #0a1a3a 60%, #000820 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    cursor: default;
+    user-select: none;
+  }
+
+  /* Aero wallpaper orbs */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 600px 400px at 20% 70%, rgba(0,80,200,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 300px at 80% 20%, rgba(100,180,255,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 300px 200px at 50% 50%, rgba(20,100,220,0.10) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanline overlay for extra suffering */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ===== WINDOW ===== */
+  #game-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -54%);
+    width: 520px;
+    background: linear-gradient(160deg, rgba(180,215,255,0.13) 0%, rgba(50,100,200,0.08) 100%);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--aero-border);
+    border-radius: 8px 8px 6px 6px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12) inset,
+      0 0 60px rgba(0,60,200,0.35),
+      0 20px 60px rgba(0,0,0,0.7);
+    z-index: 10;
+    transition: transform 0.05s;
+  }
+
+  /* Window titlebar */
+  #titlebar {
+    background: linear-gradient(180deg,
+      rgba(80,150,255,0.85) 0%,
+      rgba(30,90,210,0.9) 40%,
+      rgba(20,70,190,0.95) 100%
+    );
+    border-radius: 7px 7px 0 0;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(100,160,255,0.5);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset;
+  }
+
+  #titlebar-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #win-icon {
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle, #7ee8fa, #0070ff);
+    border-radius: 3px;
+    box-shadow: 0 0 6px rgba(120,220,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  #titlebar h1 {
+    font-size: 12px;
+    font-weight: 400;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    letter-spacing: 0.02em;
+  }
+
+  #win-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .win-btn {
+    width: 22px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(150,180,255,0.2) 100%);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    transition: background 0.1s;
+  }
+
+  .win-btn:hover { background: rgba(255,80,80,0.6); }
+  #btn-close { background: linear-gradient(180deg, rgba(255,100,80,0.5), rgba(200,40,20,0.5)); }
+
+  /* Window content */
+  #win-content {
+    padding: 28px 36px 32px;
+    text-align: center;
+    position: relative;
+  }
+
+  #game-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow:
+      0 0 20px rgba(100,180,255,0.9),
+      0 0 40px rgba(0,120,255,0.5),
+      0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  #game-subtitle {
+    font-size: 10px;
+    color: rgba(180,210,255,0.6);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  /* Score display */
+  #score-container {
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  #score-label {
+    font-size: 10px;
+    color: rgba(150,200,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 4px;
+  }
+
+  #score-display {
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--score-color);
+    text-shadow:
+      0 0 20px rgba(100,220,255,0.8),
+      0 0 40px rgba(100,220,255,0.4);
+    line-height: 1;
+    transition: transform 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== BUTTON WINDOW ===== */
+  #btn-window {
+    position: fixed;
+    width: 300px;
+    background: linear-gradient(160deg, rgba(180,215,255,0.13) 0%, rgba(50,100,200,0.08) 100%);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--aero-border);
+    border-radius: 8px 8px 6px 6px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12) inset,
+      0 0 40px rgba(0,60,200,0.3),
+      0 12px 40px rgba(0,0,0,0.6);
+    z-index: 20;
+    transition: left 0.55s cubic-bezier(.34,1.4,.64,1), top 0.55s cubic-bezier(.34,1.4,.64,1);
+  }
+
+  #btn-window.active-drag {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.2) inset,
+      0 0 50px rgba(0,120,255,0.5),
+      0 20px 60px rgba(0,0,0,0.7);
+  }
+
+  #btn-titlebar {
+    background: linear-gradient(180deg,
+      rgba(80,150,255,0.85) 0%,
+      rgba(30,90,210,0.9) 40%,
+      rgba(20,70,190,0.95) 100%
+    );
+    border-radius: 7px 7px 0 0;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(100,160,255,0.5);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset;
+    cursor: grab;
+  }
+  #btn-titlebar:active { cursor: grabbing; }
+
+  #btn-titlebar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #btn-win-icon {
+    width: 16px; height: 16px;
+    background: radial-gradient(circle, #ffe87a, #ff8c00);
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(255,180,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+
+  #btn-titlebar h2 {
+    font-size: 11px;
+    font-weight: 400;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  #btn-win-controls {
+    display: flex;
+    gap: 3px;
+  }
+
+  #btn-win-content {
+    padding: 22px 28px 24px;
+    text-align: center;
+    position: relative;
+  }
+
+  #btn-win-shine {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+
+  #btn-win-label {
+    font-size: 9px;
+    color: rgba(150,200,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
+  }
+
+  /* THE BUTTON */
+  #click-btn {
+    padding: 13px 34px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,40,0.8);
+    background: linear-gradient(180deg,
+      rgba(100,170,255,0.9) 0%,
+      rgba(30,100,220,0.95) 45%,
+      rgba(10,70,200,1) 100%
+    );
+    border: 1px solid rgba(150,200,255,0.6);
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.2) inset,
+      0 1px 0 rgba(255,255,255,0.4) inset,
+      0 4px 15px rgba(0,80,255,0.5),
+      0 2px 6px rgba(0,0,0,0.5);
+    transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
+    min-width: 180px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  #click-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg,
+      rgba(130,190,255,0.95) 0%,
+      rgba(50,120,240,1) 45%,
+      rgba(20,90,220,1) 100%
+    );
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.3) inset,
+      0 1px 0 rgba(255,255,255,0.5) inset,
+      0 6px 20px rgba(0,100,255,0.7),
+      0 2px 8px rgba(0,0,0,0.6);
+  }
+
+  #click-btn:active:not(:disabled) {
+    background: linear-gradient(180deg,
+      rgba(10,70,200,1) 0%,
+      rgba(30,100,220,0.95) 55%,
+      rgba(100,170,255,0.9) 100%
+    );
+    transform: translateY(1px);
+  }
+
+  #click-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Feedback message */
+  #feedback {
+    margin-top: 20px;
+    font-size: 13px;
+    color: rgba(180,220,255,0.8);
+    min-height: 22px;
+    transition: opacity 0.3s;
+    font-style: italic;
+  }
+
+  /* Aero glass reflection on window */
+  #glass-shine {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, transparent 100%);
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+
+  /* ===== TASKBAR ===== */
+  #taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    height: 42px;
+    background: linear-gradient(180deg,
+      rgba(30,70,180,0.85) 0%,
+      rgba(10,40,130,0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(100,160,255,0.4);
+    box-shadow: 0 -2px 20px rgba(0,40,200,0.4);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  #start-btn {
+    background: linear-gradient(180deg, rgba(80,180,80,0.9), rgba(20,120,20,0.95));
+    border: 1px solid rgba(100,220,100,0.5);
+    border-radius: 14px;
+    padding: 4px 14px 4px 10px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    box-shadow: 0 0 10px rgba(0,200,0,0.4);
+  }
+
+  #start-orb {
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle at 40% 35%, #80ff80, #008000);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0,255,0,0.5);
+  }
+
+  #clock {
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(200,220,255,0.9);
+    text-align: right;
+    line-height: 1.4;
+    padding: 0 8px;
+  }
+
+  #taskbar-task {
+    background: rgba(100,150,255,0.25);
+    border: 1px solid rgba(150,180,255,0.3);
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: rgba(200,220,255,0.9);
+    cursor: default;
+  }
+
+  /* ===== WIN OVERLAY ===== */
+  #win-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,50,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #win-overlay.active { display: flex; }
+
+  #win-message {
+    font-size: 64px;
+    color: #fff;
+    text-shadow: 0 0 40px rgba(100,220,255,1), 0 0 80px rgba(0,150,255,0.8);
+    animation: pulse-win 0.5s ease-in-out infinite alternate;
+    font-weight: 700;
+  }
+
+  @keyframes pulse-win {
+    from { transform: scale(1); }
+    to { transform: scale(1.06); }
+  }
+
+  /* ===== BSOD ===== */
+  #bsod {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0000aa;
+    z-index: 9999;
+    padding: 40px 60px;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.7;
+    flex-direction: column;
+    cursor: none;
+  }
+
+  #bsod.active { display: flex; }
+
+  #bsod-header {
+    font-size: 18px;
+    margin-bottom: 24px;
+    font-weight: bold;
+  }
+
+  #bsod-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 28px;
+    color: #fff;
+  }
+
+  #bsod-body { max-width: 620px; }
+
+  #bsod-progress {
+    margin-top: 30px;
+    font-size: 13px;
+  }
+
+  #bsod-bar {
+    display: inline-block;
+    color: #0000aa;
+    background: #fff;
+    padding: 0 2px;
+    min-width: 20px;
+    transition: min-width 0.1s;
+  }
+
+  #bsod-dismiss {
+    margin-top: 40px;
+    font-size: 13px;
+    color: #aaaaff;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* ===== Screen shake ===== */
+  @keyframes shake {
+    0%   { transform: translate(-50%, -54%) rotate(0deg); }
+    10%  { transform: translate(calc(-50% + 6px), calc(-54% - 4px)) rotate(-0.5deg); }
+    20%  { transform: translate(calc(-50% - 5px), calc(-54% + 3px)) rotate(0.4deg); }
+    30%  { transform: translate(calc(-50% + 8px), calc(-54% + 5px)) rotate(-0.3deg); }
+    40%  { transform: translate(calc(-50% - 3px), calc(-54% - 6px)) rotate(0.5deg); }
+    50%  { transform: translate(calc(-50% + 4px), calc(-54% + 2px)) rotate(-0.4deg); }
+    60%  { transform: translate(calc(-50% - 7px), calc(-54% + 4px)) rotate(0.2deg); }
+    70%  { transform: translate(calc(-50% + 2px), calc(-54% - 3px)) rotate(-0.5deg); }
+    80%  { transform: translate(calc(-50% - 4px), calc(-54% + 6px)) rotate(0.3deg); }
+    90%  { transform: translate(calc(-50% + 6px), calc(-54% - 2px)) rotate(-0.2deg); }
+    100% { transform: translate(-50%, -54%) rotate(0deg); }
+  }
+
+  .shaking { animation: shake 0.5s ease-in-out; }
+
+  /* Score pop */
+  @keyframes score-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  .score-pop { animation: score-pop 0.25s ease-out; }
+
+  /* Background flash */
+  #bg-flash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+    transition: opacity 0.1s;
+  }
+
+  /* notification toast */
+  #toast {
+    position: fixed;
+    bottom: 55px;
+    right: 14px;
+    background: linear-gradient(160deg, rgba(40,80,180,0.95), rgba(20,50,140,0.98));
+    border: 1px solid rgba(100,160,255,0.5);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: rgba(200,220,255,0.95);
+    box-shadow: 0 4px 20px rgba(0,40,200,0.5);
+    max-width: 260px;
+    transform: translateX(110%);
+    transition: transform 0.3s ease;
+    z-index: 150;
+  }
+  #toast.show { transform: translateX(0); }
+  #toast-title { font-weight: 700; font-size: 12px; margin-bottom: 2px; color: #fff; }
+
+  /* Idle score ticker */
+  #idle-ticker {
+    font-size: 10px;
+    color: rgba(120,170,255,0.5);
+    margin-top: 8px;
+    min-height: 14px;
+    font-style: italic;
+  }
+
+  /* desktop icons */
+  .desktop-icon {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: default;
+    z-index: 2;
+  }
+  .desktop-icon .icon-img {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, rgba(100,180,255,0.4), rgba(40,100,220,0.6));
+    border-radius: 4px;
+    border: 1px solid rgba(150,200,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .desktop-icon span {
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.8);
+    text-align: center;
+    max-width: 64px;
+  }
+  /* ===== FLAPPY BIRD WINDOW ===== */
+  #flappy-window {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 360px;
+    background: linear-gradient(160deg, rgba(180,215,255,0.15) 0%, rgba(50,100,200,0.1) 100%);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--aero-border);
+    border-radius: 8px 8px 6px 6px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12) inset,
+      0 0 80px rgba(0,60,200,0.5),
+      0 20px 60px rgba(0,0,0,0.8);
+    z-index: 500;
+    overflow: hidden;
+  }
+  #flappy-window.active { display: block; }
+
+  #flappy-titlebar {
+    background: linear-gradient(180deg,
+      rgba(80,150,255,0.85) 0%,
+      rgba(30,90,210,0.9) 40%,
+      rgba(20,70,190,0.95) 100%
+    );
+    border-radius: 7px 7px 0 0;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(100,160,255,0.5);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset;
+  }
+
+  #flappy-titlebar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  #flappy-icon {
+    width: 16px; height: 16px;
+    background: radial-gradient(circle, #ffe87a, #ff8c00);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+
+  #flappy-canvas {
+    display: block;
+    width: 360px;
+    height: 480px;
+    image-rendering: pixelated;
+  }
+
+  #flappy-overlay {
+    position: absolute;
+    inset: 28px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    gap: 10px;
+  }
+  #flappy-overlay.hidden { display: none; }
+
+  #flappy-overlay-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(100,200,255,0.9), 0 2px 4px rgba(0,0,0,0.8);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  #flappy-overlay-sub {
+    font-size: 11px;
+    color: rgba(180,220,255,0.8);
+    text-align: center;
+    font-style: italic;
+  }
+
+  #flappy-start-btn {
+    margin-top: 8px;
+    padding: 10px 28px;
+    background: linear-gradient(180deg, rgba(100,170,255,0.9), rgba(30,100,220,0.95));
+    border: 1px solid rgba(150,200,255,0.6);
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,80,255,0.5);
+  }
+  #flappy-start-btn:hover { background: linear-gradient(180deg, rgba(130,190,255,0.95), rgba(50,120,240,1)); }
+
+  #flappy-score-display {
+    position: absolute;
+    top: 40px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(100,220,255,0.8), 0 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  @keyframes flappy-shake {
+    0%, 100% { transform: translate(-50%, -50%); }
+    20% { transform: translate(calc(-50% + 8px), calc(-50% - 5px)); }
+    40% { transform: translate(calc(-50% - 6px), calc(-50% + 4px)); }
+    60% { transform: translate(calc(-50% + 5px), calc(-50% + 6px)); }
+    80% { transform: translate(calc(-50% - 4px), calc(-50% - 3px)); }
+  }
+  .flappy-death-shake { animation: flappy-shake 0.4s ease-in-out; }
+</style>
+</head>
+<body>
+
+<!-- Desktop icons -->
+<div class="desktop-icon" style="top:20px;left:20px">
+  <div class="icon-img">🖥️</div>
+  <span>My Computer</span>
+</div>
+<div class="desktop-icon" style="top:100px;left:20px">
+  <div class="icon-img">🗑️</div>
+  <span>Recycle Bin</span>
+</div>
+<div class="desktop-icon" style="top:180px;left:20px">
+  <div class="icon-img">📁</div>
+  <span>My Documents</span>
+</div>
+<div class="desktop-icon" style="top:260px;left:20px">
+  <div class="icon-img">🔒</div>
+  <span>Trust.exe</span>
+</div>
+
+<!-- BG flash -->
+<div id="bg-flash"></div>
+
+<!-- Main game window -->
+<div id="game-window">
+  <div id="glass-shine"></div>
+  <div id="titlebar">
+    <div id="titlebar-left">
+      <div id="win-icon">🏆</div>
+      <h1>I Swear It Worked Before — Score Tracker v2.1</h1>
+    </div>
+    <div id="win-controls">
+      <div class="win-btn">─</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn" id="btn-close">✕</div>
+    </div>
+  </div>
+  <div id="win-content">
+    <div id="game-title">I Swear It Worked Before</div>
+    <div id="game-subtitle">Certified Windows Vista™ Compatible</div>
+
+    <div id="score-container">
+      <div id="score-label">Score</div>
+      <div id="score-display">0</div>
+      <div id="idle-ticker">&nbsp;</div>
+    </div>
+
+    <div id="feedback">Good choice 👍</div>
+  </div>
+</div>
+
+<!-- Floating button window -->
+<div id="btn-window">
+  <div id="btn-win-shine"></div>
+  <div id="btn-titlebar">
+    <div id="btn-titlebar-left">
+      <div id="btn-win-icon">🏆</div>
+      <h2>Click To Win — Utility v1.0</h2>
+    </div>
+    <div id="btn-win-controls">
+      <div class="win-btn">─</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn" id="btn-win-close">✕</div>
+    </div>
+  </div>
+  <div id="btn-win-content">
+    <div id="btn-win-label">Score Input Module</div>
+    <button id="click-btn">CLICK TO WIN</button>
+  </div>
+</div>
+
+<!-- FLAPPY BIRD WINDOW -->
+<div id="flappy-window">
+  <div id="flappy-titlebar">
+    <div id="flappy-titlebar-left">
+      <div id="flappy-icon">🐦</div>
+      Required Security Verification — Windows Vista
+    </div>
+    <div id="btn-win-controls" style="display:flex;gap:3px;">
+      <div class="win-btn">─</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn" id="flappy-close-btn" style="background:linear-gradient(180deg,rgba(255,100,80,0.5),rgba(200,40,20,0.5))">✕</div>
+    </div>
+  </div>
+  <div style="position:relative;">
+    <canvas id="flappy-canvas" width="360" height="480"></canvas>
+    <div id="flappy-score-display">0</div>
+    <div id="flappy-overlay">
+      <div id="flappy-overlay-title">Security Check Required</div>
+      <div id="flappy-overlay-sub">Complete verification to continue.<br>Your score depends on this.</div>
+      <button id="flappy-start-btn">Begin Verification</button>
+    </div>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay">
+  <div id="win-message">YOU WIN 🎉</div>
+</div>
+
+<!-- BSOD -->
+<div id="bsod">
+  <div id="bsod-header">Windows</div>
+  <div id="bsod-title">A problem has been detected and Windows has been shut down to prevent damage to your computer.</div>
+  <div id="bsod-body">
+    <p>TRUST_VIOLATION_EXCEPTION</p>
+    <br>
+    <p>If this is the first time you've seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:</p>
+    <br>
+    <p>Check to make sure any new hardware or software is properly installed. If this is a new installation, ask your hardware or software manufacturer for any Windows updates you might need.</p>
+    <br>
+    <p>If problems continue, disable or remove any newly installed hardware or software. Disable BIOS memory options such as caching or shadowing. If you need to use Safe Mode to remove or disable components, restart your computer, press F8 to select Advanced Startup Options, and then select Safe Mode.</p>
+    <br>
+    <p>Technical information:</p>
+    <br>
+    <p>*** STOP: 0x00000C9F (0xFEELINGS, 0xBETRAYAL, 0x00000001, 0xYOUTRUSTED)</p>
+    <br>
+    <p>Collecting data for crash dump ...</p>
+    <p>Initializing disk for crash dump ...</p>
+    <p>Beginning dump of physical memory.</p>
+  </div>
+  <div id="bsod-progress">
+    Dumping physical memory to disk: <span id="bsod-bar">  </span> <span id="bsod-pct">0</span>%
+  </div>
+  <div id="bsod-dismiss">Press any key to return (or don't, it won't matter)</div>
+</div>
+
+<!-- Taskbar -->
+<div id="taskbar">
+  <div id="start-btn">
+    <div id="start-orb"></div>
+    Start
+  </div>
+  <div id="taskbar-task">📊 I Swear It Worked Before</div>
+  <div id="taskbar-task2" style="background:rgba(100,150,255,0.25);border:1px solid rgba(150,180,255,0.3);border-radius:3px;padding:3px 10px;font-size:12px;color:rgba(200,220,255,0.9);cursor:default;">🏆 Click To Win — Utility v1.0</div>
+  <div id="taskbar-flappy" style="display:none;background:rgba(255,140,0,0.3);border:1px solid rgba(255,180,80,0.4);border-radius:3px;padding:3px 10px;font-size:12px;color:rgba(255,220,150,0.9);cursor:default;">🐦 Security Verification</div>
+  <div id="clock" id="clock-display">
+    <div id="clock-time">12:00 PM</div>
+    <div id="clock-date">2/10/2026</div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast">
+  <div id="toast-title">Windows Security Center</div>
+  <div id="toast-body">Your score may be at risk.</div>
+</div>
+
+<!-- Hidden audio context for suffering sounds -->
+<script>
+// ==========================================
+// AUDIO ENGINE
+// ==========================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol = 0.3, delay = 0) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.01);
+  } catch(e) {}
+}
+
+function playVictorySound() {
+  // Victory fanfare on failure
+  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'sine', 0.18, 0.25, i * 0.12));
+}
+
+function playFailureSound() {
+  // Sad trombone on success
+  [400, 350, 300, 250].forEach((f, i) => playTone(f, 'sawtooth', 0.22, 0.2, i * 0.1));
+}
+
+function playFreezeSound() {
+  playTone(880, 'square', 0.08, 0.1);
+  playTone(440, 'square', 0.08, 0.1, 0.09);
+}
+
+function playBSODSound() {
+  playTone(200, 'sawtooth', 1.5, 0.4);
+  playTone(150, 'sawtooth', 1.5, 0.3, 0.1);
+}
+
+function playIdleScore() {
+  playTone(330, 'triangle', 0.2, 0.07);
+}
+
+// ==========================================
+// GAME STATE
+// ==========================================
+let realScore = 0;       // actual score
+let displayedScore = 0;  // what we show (may lie)
+let clickCount = 0;
+let phase = 1;           // 1=normal, 2=rule drift, 3=betrayal
+let frozen = false;
+let betsReversed = false; // swap win/lose
+let fakeWinShown = false;
+let bsodShown = false;
+
+const btn = document.getElementById('click-btn');
+const scoreEl = document.getElementById('score-display');
+const feedback = document.getElementById('feedback');
+const winOverlay = document.getElementById('win-overlay');
+const bsod = document.getElementById('bsod');
+const bgFlash = document.getElementById('bg-flash');
+const toast = document.getElementById('toast');
+const idleTicker = document.getElementById('idle-ticker');
+
+const buttonTexts = ["STOP", "DON'T CLICK", "TRUST ME", "PLEASE", "ALMOST", "YES"];
+const feedbackMsgs = [
+  "Good choice 👍",
+  "Excellent decision 👍",
+  "Very smart! 👍",
+  "You're doing great 👍",
+  "Perfect 👍",
+  "That's the one 👍",
+];
+const idleMessages = [
+  "waiting for input...",
+  "score is stable",
+  "nothing is happening",
+  "everything is fine",
+];
+
+// ==========================================
+// CLOCK
+// ==========================================
+function updateClock() {
+  const now = new Date();
+  let h = now.getHours(), m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  const timeStr = `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+  const dateStr = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
+  document.getElementById('clock-time').textContent = timeStr;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ==========================================
+// SCORE DISPLAY (lies ±1 randomly)
+// ==========================================
+function updateScoreDisplay(animPop = true) {
+  const lie = (Math.random() < 0.4) ? (Math.random() < 0.5 ? 1 : -1) : 0;
+  displayedScore = realScore + lie;
+  scoreEl.textContent = displayedScore;
+  if (animPop) {
+    scoreEl.classList.remove('score-pop');
+    void scoreEl.offsetWidth;
+    scoreEl.classList.add('score-pop');
+  }
+  scoreEl.style.textShadow = realScore < 0
+    ? '0 0 20px rgba(255,80,80,0.9), 0 0 40px rgba(255,0,0,0.5)'
+    : '0 0 20px rgba(100,220,255,0.8), 0 0 40px rgba(100,220,255,0.4)';
+}
+
+function setFeedback(msg) {
+  feedback.textContent = feedbackMsgs[Math.floor(Math.random() * feedbackMsgs.length)];
+}
+
+// ==========================================
+// SHAKE & FLASH
+// ==========================================
+function shakeWindow() {
+  const gw = document.getElementById('game-window');
+  gw.classList.remove('shaking');
+  void gw.offsetWidth;
+  gw.classList.add('shaking');
+}
+
+function flashBg(color, duration = 200) {
+  bgFlash.style.backgroundColor = color;
+  bgFlash.style.opacity = '0.7';
+  setTimeout(() => { bgFlash.style.opacity = '0'; }, duration);
+}
+
+function violentColorChange() {
+  const colors = [
+    '#ff3300', '#00ff44', '#ff00ff', '#ffaa00',
+    '#00ffff', '#8800ff', '#ff0088'
+  ];
+  const c = colors[Math.floor(Math.random() * colors.length)];
+  document.body.style.background = `radial-gradient(ellipse at 50% 50%, ${c}33 0%, #000 70%)`;
+  setTimeout(() => {
+    document.body.style.background = 'radial-gradient(ellipse at 60% 30%, #1a4a9a 0%, #0a1a3a 60%, #000820 100%)';
+  }, 800);
+  flashBg(c, 150);
+}
+
+// ==========================================
+// BUTTON WINDOW — ROAM + FLEE + FREEZE + DRAG
+// ==========================================
+const btnWin = document.getElementById('btn-window');
+let winX = 0, winY = 0;
+let winInitialized = false;
+let btnMoving = false;   // flee mode (phase 3+)
+let fleeSpeed = 1;
+let panicMode = false;
+let roamStarted = false;
+
+// Behaviour state machine
+// 'roaming'  — slides to random spots on a timer
+// 'frozen'   — completely still, lets player approach
+// 'fleeing'  — runs from cursor
+// 'sprinting'— full-screen random dash loop, no stopping
+let winState = 'roaming';
+let winStateLocked = false;   // prevent re-entry during transitions
+let isDragging = false;
+let dragOffX = 0, dragOffY = 0;
+
+// ---- helpers ----
+function getWinDims() {
+  return { w: btnWin.offsetWidth || 300, h: btnWin.offsetHeight || 110 };
+}
+
+function clampWinPos(x, y) {
+  const { w, h } = getWinDims();
+  const W = window.innerWidth, H = window.innerHeight - 42;
+  return {
+    x: Math.max(0, Math.min(W - w, x)),
+    y: Math.max(0, Math.min(H - h, y))
+  };
+}
+
+function setWinPos(x, y, instant) {
+  const c = clampWinPos(x, y);
+  winX = c.x; winY = c.y;
+  if (instant) {
+    const saved = btnWin.style.transition;
+    btnWin.style.transition = 'none';
+    btnWin.style.left = winX + 'px';
+    btnWin.style.top  = winY + 'px';
+    void btnWin.offsetWidth;
+    btnWin.style.transition = saved;
+  } else {
+    btnWin.style.left = winX + 'px';
+    btnWin.style.top  = winY + 'px';
+  }
+}
+
+function setTransition(speed) {
+  // speed: 'slow' | 'fast' | 'snap' | 'none'
+  const map = {
+    slow:  'left 0.65s cubic-bezier(.34,1.4,.64,1), top 0.65s cubic-bezier(.34,1.4,.64,1)',
+    fast:  'left 0.14s cubic-bezier(.22,.68,0,1.2), top 0.14s cubic-bezier(.22,.68,0,1.2)',
+    snap:  'left 0.06s linear, top 0.06s linear',
+    none:  'none',
+  };
+  btnWin.style.transition = map[speed] || map.slow;
+}
+
+function initWinPosition() {
+  if (winInitialized) return;
+  const { w, h } = getWinDims();
+  const W = window.innerWidth, H = window.innerHeight - 42;
+  winX = W / 2 - w / 2;
+  winY = H / 2 - h / 2 + 50;
+  setTransition('none');
+  btnWin.style.left = winX + 'px';
+  btnWin.style.top  = winY + 'px';
+  setTransition('slow');
+  winInitialized = true;
+}
+
+function randomPos(pad = 50) {
+  const { w, h } = getWinDims();
+  const W = window.innerWidth, H = window.innerHeight - 42;
+  return {
+    x: pad + Math.random() * (W - w - pad * 2),
+    y: pad + Math.random() * (H - h - pad * 2),
+  };
+}
+
+function randomSafePos(avoidX, avoidY) {
+  const { w, h } = getWinDims();
+  const W = window.innerWidth, H = window.innerHeight - 42;
+  let best = { x: winX, y: winY }, bestD = 0;
+  for (let i = 0; i < 14; i++) {
+    const tx = 20 + Math.random() * (W - w - 40);
+    const ty = 20 + Math.random() * (H - h - 40);
+    const d = Math.hypot(tx + w/2 - avoidX, ty + h/2 - avoidY);
+    if (d > bestD) { bestD = d; best = { x: tx, y: ty }; }
+  }
+  return best;
+}
+
+// ---- STATE MACHINE ----
+
+function enterState(state) {
+  if (winStateLocked || isDragging) return;
+  winState = state;
+
+  if (state === 'frozen') {
+    setTransition('slow');
+    // Stay still for a longer duration so the player can actually reach it
+    const freezeMs = 4000 + Math.random() * 6000;
+    winStateLocked = true;
+    setTimeout(() => {
+      winStateLocked = false;
+      // 40% chance to sprint after thaw, 60% to just keep roaming
+      enterState(Math.random() < 0.4 ? 'sprinting' : 'roaming');
+    }, freezeMs);
+
+  } else if (state === 'roaming') {
+    setTransition('slow');
+    scheduleRoam();
+
+  } else if (state === 'sprinting') {
+    // Rapid-fire random jumps — keep going until we randomly decide to freeze
+    setTransition('fast');
+    doSprintLoop();
+  }
+}
+
+let sprintLoopActive = false;
+function doSprintLoop() {
+  if (isDragging) { setTimeout(doSprintLoop, 500); return; }
+  if (winState !== 'sprinting') { sprintLoopActive = false; return; }
+  sprintLoopActive = true;
+
+  const p = randomPos(30);
+  setWinPos(p.x, p.y);
+
+  // Each jump: longer delay between hops so it doesn't feel like a seizure
+  const jumpDelay = 600 + Math.random() * 900;
+  setTimeout(() => {
+    if (winState !== 'sprinting') { sprintLoopActive = false; return; }
+    // ~35% chance to freeze mid-sprint (the maddening "gotcha" moment)
+    if (Math.random() < 0.35) {
+      sprintLoopActive = false;
+      enterState('frozen');
+    } else {
+      doSprintLoop();
+    }
+  }, jumpDelay);
+}
+
+// Roaming scheduler — drifts to a new spot every 6-14 seconds (much calmer)
+let roamTimeout = null;
+function scheduleRoam() {
+  clearTimeout(roamTimeout);
+  if (winState !== 'roaming' || isDragging) return;
+  const delay = 6000 + Math.random() * 8000;   // was 2000-5500ms
+  roamTimeout = setTimeout(() => {
+    if (winState !== 'roaming' || isDragging) return;
+    const p = randomPos(50);
+    setWinPos(p.x, p.y);
+    // After moving, roll for state change — mostly keep roaming
+    const roll = Math.random();
+    if (roll < 0.15) {
+      enterState('frozen');          // stop and lure
+    } else if (roll < 0.22) {
+      enterState('sprinting');       // rare berserk
+    } else {
+      scheduleRoam();                // keep roaming (most likely)
+    }
+  }, delay);
+}
+
+function startRoaming() {
+  if (roamStarted) return;
+  roamStarted = true;
+  setTimeout(() => enterState('roaming'), 7000); // sits still for 7s before first move
+}
+
+// ---- MOUSE FLEE (phase 3+) ----
+function moveWindowAway(e) {
+  if (!btnMoving || btn.disabled || isDragging) return;
+  // Flee overrides roaming/frozen states — still runs during sprint too
+  const { w, h } = getWinDims();
+  const bx = winX + w / 2, by = winY + h / 2;
+  const dx = bx - e.clientX, dy = by - e.clientY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const triggerDist = panicMode ? 420 : 230;
+
+  if (dist < triggerDist) {
+    if (winState === 'frozen') {
+      // Being approached while frozen — SNAP out and sprint away
+      enterState('sprinting');
+      return;
+    }
+    setTransition('fast');
+    const len = Math.max(dist, 1);
+    const force = panicMode
+      ? (triggerDist - dist) * 0.6 * fleeSpeed
+      : (triggerDist - dist) * 0.22 * fleeSpeed;
+    const nx2 = winX + (dx / len) * force;
+    const ny2 = winY + (dy / len) * force;
+    const c = clampWinPos(nx2, ny2);
+    const hitWall = (Math.abs(c.x - nx2) > 1 || Math.abs(c.y - ny2) > 1);
+    if (hitWall) {
+      const safe = randomSafePos(e.clientX, e.clientY);
+      setWinPos(safe.x, safe.y, true);
+    } else {
+      winX = c.x; winY = c.y;
+      btnWin.style.left = winX + 'px';
+      btnWin.style.top  = winY + 'px';
+    }
+  }
+}
+document.addEventListener('mousemove', moveWindowAway);
+
+// Escalate panic over time
+setInterval(() => {
+  if (!btnMoving) return;
+  fleeSpeed = Math.min(fleeSpeed + 0.1, 4.5);
+  if (fleeSpeed > 2.2) panicMode = true;
+}, 3000);
+
+// ---- DRAG SUPPORT ----
+const btnTitlebar = document.getElementById('btn-titlebar');
+
+btnTitlebar.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  isDragging = true;
+  clearTimeout(roamTimeout);
+  setTransition('none');
+  dragOffX = e.clientX - winX;
+  dragOffY = e.clientY - winY;
+  btnWin.classList.add('active-drag');
+  btnWin.style.cursor = 'grabbing';
+  btnTitlebar.style.cursor = 'grabbing';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const c = clampWinPos(e.clientX - dragOffX, e.clientY - dragOffY);
+  winX = c.x; winY = c.y;
+  btnWin.style.left = winX + 'px';
+  btnWin.style.top  = winY + 'px';
+});
+
+document.addEventListener('mouseup', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+  btnWin.classList.remove('active-drag');
+  btnWin.style.cursor = '';
+  btnTitlebar.style.cursor = '';
+  setTransition('slow');
+
+  // After drag release, window waits longer before resuming chaos
+  const resumeDelay = 3000 + Math.random() * 3000;
+  setTimeout(() => {
+    if (!isDragging) {
+      // Mostly roam after drag, occasionally sprint to punish
+      const roll = Math.random();
+      if (roll < 0.25) enterState('sprinting');
+      else if (roll < 0.45) enterState('frozen');
+      else enterState('roaming');
+    }
+  }, resumeDelay);
+});
+
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+let toastTimeout;
+function showToast(title, body) {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent = body;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+const toastMessages = [
+  ['Windows Security Center', 'Your score may be at risk.'],
+  ['Score Integrity Monitor', 'A discrepancy has been detected.'],
+  ['Trust Verification Service', 'Validating click authenticity...'],
+  ['Windows Experience Index', 'Score recalculation recommended.'],
+  ['Authenticity Check', 'Your actions may not be your own.'],
+];
+
+// ==========================================
+// BSOD
+// ==========================================
+function triggerBSOD() {
+  if (bsodShown) return;
+  bsodShown = true;
+  playBSODSound();
+  bsod.classList.add('active');
+
+  let pct = 0;
+  const bar = document.getElementById('bsod-bar');
+  const pctEl = document.getElementById('bsod-pct');
+  const iv = setInterval(() => {
+    pct += Math.floor(Math.random() * 7) + 1;
+    if (pct >= 100) {
+      pct = 100;
+      clearInterval(iv);
+      setTimeout(() => {
+        bsod.classList.remove('active');
+        bsodShown = false;
+        // After BSOD, penalize
+        realScore -= 5;
+        updateScoreDisplay();
+        showToast('System Restored', 'Some progress may have been lost.');
+      }, 2000);
+    }
+    const filled = Math.floor(pct / 5);
+    bar.textContent = '█'.repeat(filled) + ' '.repeat(20 - filled);
+    pctEl.textContent = pct;
+  }, 80);
+}
+
+document.addEventListener('keydown', () => {
+  if (bsod.classList.contains('active') && !bsodShown) return;
+});
+
+// ==========================================
+// IDLE SCORE DRIFT
+// ==========================================
+let idleTimer = 0;
+setInterval(() => {
+  if (frozen || bsod.classList.contains('active')) return;
+  idleTimer++;
+  // Every ~15 seconds of idle, score drifts
+  if (idleTimer > 0 && idleTimer % 15 === 0 && phase >= 3) {
+    const drift = Math.random() < 0.6 ? -1 : 1;
+    realScore += drift;
+    updateScoreDisplay(false);
+    idleTicker.textContent = drift > 0 ? '↑ background process' : '↓ idle decay';
+    playIdleScore();
+    setTimeout(() => { idleTicker.textContent = '\u00A0'; }, 3000);
+  }
+}, 1000);
+
+// ==========================================
+// CLOSE BUTTON — triggers BSOD
+// ==========================================
+document.getElementById('btn-close').addEventListener('click', () => {
+  triggerBSOD();
+});
+document.getElementById('btn-win-close').addEventListener('click', () => {
+  triggerBSOD();
+});
+
+// ==========================================
+// PHASE MANAGEMENT
+// ==========================================
+function getPhase() {
+  if (clickCount < 10) return 1;
+  if (clickCount < 20) return 2;
+  return 3;
+}
+
+// ==========================================
+// MAIN CLICK HANDLER
+// ==========================================
+btn.addEventListener('click', () => {
+  if (frozen) return;
+  if (bsod.classList.contains('active')) return;
+
+  clickCount++;
+  phase = getPhase();
+
+  // Unlock window flee in phase 3
+  if (phase >= 3 && !btnMoving) {
+    btnMoving = true;
+    showToast('Button Behavior Changed', 'A new update has been applied.');
+  }
+
+  // Decide score change
+  let delta = 0;
+  const roll = Math.random();
+
+  if (phase === 1) {
+    delta = roll < 0.55 ? 1 : -1;
+  } else if (phase === 2) {
+    delta = roll < 0.45 ? 1 : -1;
+  } else {
+    // Betrayal phase
+    if (betsReversed) {
+      delta = roll < 0.6 ? -1 : 1; // mostly lose
+    } else {
+      delta = roll < 0.4 ? 1 : -2; // can lose 2
+    }
+  }
+
+  // Apply delay before score updates
+  const scoreDelay = phase >= 2 ? Math.random() * 800 + 200 : 80;
+
+  // Always show "Good choice" immediately
+  setFeedback();
+
+  // Sound on opposite condition for maximum confusion
+  if (delta > 0) {
+    setTimeout(playFailureSound, scoreDelay * 0.6);
+  } else {
+    setTimeout(playVictorySound, scoreDelay * 0.6);
+  }
+
+  // Delayed score update
+  setTimeout(() => {
+    realScore += delta;
+
+    // Phase 3 chaos events
+    if (phase >= 3) {
+      const chaos = Math.random();
+
+      if (chaos < 0.25) {
+        // Freeze
+        frozen = true;
+        btn.disabled = true;
+        playFreezeSound();
+        setTimeout(() => {
+          frozen = false;
+          btn.disabled = false;
+        }, 3000);
+      }
+
+      if (chaos < 0.35) violentColorChange();
+      if (chaos < 0.15 && !bsodShown) triggerBSOD();
+
+      // Shake
+      if (Math.random() < 0.4) shakeWindow();
+    }
+
+    if (phase >= 2 && Math.random() < 0.3) shakeWindow();
+
+    updateScoreDisplay();
+
+    // Random toasts
+    if (Math.random() < 0.12) {
+      const t = toastMessages[Math.floor(Math.random() * toastMessages.length)];
+      showToast(t[0], t[1]);
+    }
+
+    // CHECK WIN CONDITION (fake win at 10)
+    if (realScore >= 10 && !fakeWinShown) {
+      fakeWinShown = true;
+      triggerFakeWin();
+    }
+
+    // Real BSOD trigger at very high score
+    if (realScore >= 20 && !bsodShown) {
+      triggerBSOD();
+    }
+
+  }, scoreDelay);
+
+  // Phase 2+ button text changes
+  if (phase >= 2) {
+    setTimeout(() => {
+      const texts = [...buttonTexts];
+      btn.textContent = texts[Math.floor(Math.random() * texts.length)];
+      setTimeout(() => {
+        if (Math.random() < 0.5) btn.textContent = "CLICK TO WIN";
+      }, 2000 + Math.random() * 2000);
+    }, Math.random() * 500);
+  }
+
+  // Occasionally lure back to center (false hope), then immediately sprint
+  if (btnMoving && Math.random() < 0.1) {
+    const { w, h } = getWinDims();
+    const W = window.innerWidth, H = window.innerHeight - 42;
+    winStateLocked = false;
+    setTransition('slow');
+    setWinPos(W / 2 - w / 2 + (Math.random() - 0.5) * 120, H / 2 - h / 2 + (Math.random() - 0.5) * 80);
+    setTimeout(() => enterState('sprinting'), 900);
+  }
+});
+
+// ==========================================
+// NOT CLICKING INCREASES SCORE (phase 3)
+// ==========================================
+let notClickTimer = 0;
+setInterval(() => {
+  phase = getPhase();
+  if (phase < 3 || frozen || bsod.classList.contains('active')) return;
+  notClickTimer++;
+  // After 8 seconds of not clicking, silent score gain
+  if (notClickTimer >= 8) {
+    notClickTimer = 0;
+    if (Math.random() < 0.5) {
+      realScore += 1;
+      updateScoreDisplay(false);
+    }
+  }
+}, 1000);
+
+btn.addEventListener('click', () => { notClickTimer = 0; });
+
+// ==========================================
+// FAKE WIN
+// ==========================================
+function triggerFakeWin() {
+  btn.disabled = true;
+  winOverlay.classList.add('active');
+  playVictorySound();
+  playTone(800, 'sine', 0.5, 0.3, 0.3);
+
+  setTimeout(() => {
+    const wm = document.getElementById('win-message');
+    wm.textContent = 'JUST KIDDING';
+    wm.style.fontSize = '48px';
+    wm.style.color = '#ff4444';
+    wm.style.textShadow = '0 0 40px rgba(255,50,50,0.9), 0 0 80px rgba(200,0,0,0.7)';
+    playFailureSound();
+    violentColorChange();
+    shakeWindow();
+
+    setTimeout(() => {
+      winOverlay.classList.remove('active');
+      wm.textContent = 'YOU WIN 🎉';
+      wm.style.fontSize = '64px';
+      wm.style.color = '#fff';
+      wm.style.textShadow = '0 0 40px rgba(100,220,255,1), 0 0 80px rgba(0,150,255,0.8)';
+
+      // Reset score to something worse
+      realScore = -(Math.floor(Math.random() * 5) + 3);
+      updateScoreDisplay();
+      btn.disabled = false;
+
+      // Reverse the conditions now
+      betsReversed = !betsReversed;
+
+      showToast('Score Recalibrated', 'Previous progress has been normalized.');
+      playTone(150, 'sawtooth', 0.8, 0.4);
+    }, 1200);
+  }, 2000);
+}
+
+// ==========================================
+// PASSIVE CHAOS (random events every N secs)
+// ==========================================
+setInterval(() => {
+  if (bsod.classList.contains('active') || phase < 3) return;
+  const r = Math.random();
+  if (r < 0.08) {
+    violentColorChange();
+    shakeWindow();
+  } else if (r < 0.14) {
+    showToast('Unexpected Error', `Score integrity: ${Math.floor(Math.random()*100)}%`);
+  } else if (r < 0.18 && !bsodShown && clickCount > 15) {
+    triggerBSOD();
+  }
+}, 5000);
+
+// ==========================================
+// INITIAL TOAST
+// ==========================================
+setTimeout(() => {
+  showToast('Welcome', 'Click the button to begin scoring.');
+}, 3000);
+
+// ==========================================
+// FLAPPY BIRD ENGINE
+// ==========================================
+const flappyWindow   = document.getElementById('flappy-window');
+const flappyCanvas   = document.getElementById('flappy-canvas');
+const flappyOverlay  = document.getElementById('flappy-overlay');
+const flappyTitle    = document.getElementById('flappy-overlay-title');
+const flappySub      = document.getElementById('flappy-overlay-sub');
+const flappyStartBtn = document.getElementById('flappy-start-btn');
+const flappyScoreEl  = document.getElementById('flappy-score-display');
+const flappyTaskbar  = document.getElementById('taskbar-flappy');
+const fctx           = flappyCanvas.getContext('2d');
+
+const FW = 360, FH = 480;
+let flappyActive     = false;
+let flappyRunning    = false;
+let flappyTriggered  = false;
+let flappyAnimId     = null;
+
+// Game state
+let bird, pipes, fScore, fFrame, fGameOver, fStarted;
+const GRAVITY   = 0.38;
+const FLAP      = -7.2;
+const PIPE_W    = 52;
+const PIPE_GAP  = 145;    // gap between top/bottom pipe
+const PIPE_SPEED = 2.4;
+const PIPE_INTERVAL = 110; // frames between pipes
+
+// Vista Aero colour palette for Flappy
+const SKY_TOP  = '#1a3a7a';
+const SKY_BOT  = '#0a1a3a';
+const GROUND_C = '#1a2a5a';
+const PIPE_TOP = '#2255cc';
+const PIPE_LIT = '#4488ff';
+const PIPE_DRK = '#112266';
+const BIRD_C   = '#ffe066';
+const BIRD_EYE = '#001040';
+const BIRD_WNG = '#ffaa00';
+
+function resetFlappy() {
+  bird  = { x: 80, y: FH / 2, vy: 0, r: 14, angle: 0 };
+  pipes = [];
+  fScore    = 0;
+  fFrame    = 0;
+  fGameOver = false;
+  fStarted  = false;
+  flappyScoreEl.textContent = '0';
+}
+
+function spawnPipe() {
+  const minTop = 60, maxTop = FH - PIPE_GAP - 80;
+  const topH = minTop + Math.random() * (maxTop - minTop);
+  pipes.push({ x: FW, topH, scored: false });
+}
+
+function flap() {
+  if (!fStarted) { fStarted = true; }
+  if (!fGameOver) bird.vy = FLAP;
+  playTone(600, 'sine', 0.08, 0.15);
+}
+
+function drawRoundRect(x, y, w, h, r) {
+  fctx.beginPath();
+  fctx.moveTo(x + r, y);
+  fctx.lineTo(x + w - r, y);
+  fctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  fctx.lineTo(x + w, y + h - r);
+  fctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  fctx.lineTo(x + r, y + h);
+  fctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  fctx.lineTo(x, y + r);
+  fctx.quadraticCurveTo(x, y, x + r, y);
+  fctx.closePath();
+}
+
+function drawScene() {
+  // Sky gradient
+  const grad = fctx.createLinearGradient(0, 0, 0, FH);
+  grad.addColorStop(0, SKY_TOP);
+  grad.addColorStop(1, SKY_BOT);
+  fctx.fillStyle = grad;
+  fctx.fillRect(0, 0, FW, FH);
+
+  // Subtle scanlines
+  for (let y = 0; y < FH; y += 4) {
+    fctx.fillStyle = 'rgba(0,0,0,0.04)';
+    fctx.fillRect(0, y, FW, 2);
+  }
+
+  // Ground
+  fctx.fillStyle = GROUND_C;
+  fctx.fillRect(0, FH - 50, FW, 50);
+  fctx.fillStyle = 'rgba(100,160,255,0.3)';
+  fctx.fillRect(0, FH - 50, FW, 2);
+
+  // Aero grid lines on ground
+  fctx.strokeStyle = 'rgba(80,140,255,0.15)';
+  fctx.lineWidth = 1;
+  for (let x = (fFrame * 1.5) % 40; x < FW; x += 40) {
+    fctx.beginPath(); fctx.moveTo(x, FH - 50); fctx.lineTo(x, FH); fctx.stroke();
+  }
+}
+
+function drawPipes() {
+  pipes.forEach(p => {
+    // Bottom pipe body
+    const botY = p.topH + PIPE_GAP;
+    const botH = FH - 50 - botY;
+
+    // Top pipe
+    const tg = fctx.createLinearGradient(p.x, 0, p.x + PIPE_W, 0);
+    tg.addColorStop(0, PIPE_DRK);
+    tg.addColorStop(0.3, PIPE_LIT);
+    tg.addColorStop(1, PIPE_DRK);
+    fctx.fillStyle = tg;
+    drawRoundRect(p.x, 0, PIPE_W, p.topH - 6, 0);
+    fctx.fill();
+    // Cap
+    fctx.fillStyle = PIPE_LIT;
+    drawRoundRect(p.x - 4, p.topH - 18, PIPE_W + 8, 18, 4);
+    fctx.fill();
+    // Shine
+    fctx.fillStyle = 'rgba(150,200,255,0.25)';
+    fctx.fillRect(p.x + 6, 0, 8, p.topH - 6);
+
+    // Bottom pipe
+    fctx.fillStyle = tg;
+    drawRoundRect(p.x, botY + 6, PIPE_W, botH, 0);
+    fctx.fill();
+    // Cap
+    fctx.fillStyle = PIPE_LIT;
+    drawRoundRect(p.x - 4, botY, PIPE_W + 8, 18, 4);
+    fctx.fill();
+    // Shine
+    fctx.fillStyle = 'rgba(150,200,255,0.25)';
+    fctx.fillRect(p.x + 6, botY + 6, 8, botH);
+
+    // Aero glow on caps
+    fctx.shadowColor = 'rgba(80,160,255,0.6)';
+    fctx.shadowBlur = 10;
+    fctx.fillStyle = 'rgba(100,180,255,0.15)';
+    fctx.fillRect(p.x - 4, p.topH - 18, PIPE_W + 8, 4);
+    fctx.fillRect(p.x - 4, botY, PIPE_W + 8, 4);
+    fctx.shadowBlur = 0;
+  });
+}
+
+function drawBird() {
+  fctx.save();
+  const angle = Math.max(-0.4, Math.min(1.2, bird.vy * 0.06));
+  fctx.translate(bird.x, bird.y);
+  fctx.rotate(angle);
+
+  // Glow
+  fctx.shadowColor = 'rgba(255,220,80,0.6)';
+  fctx.shadowBlur = 14;
+
+  // Body
+  fctx.fillStyle = BIRD_C;
+  fctx.beginPath();
+  fctx.ellipse(0, 0, bird.r, bird.r * 0.85, 0, 0, Math.PI * 2);
+  fctx.fill();
+
+  // Wing
+  fctx.fillStyle = BIRD_WNG;
+  fctx.beginPath();
+  const wingFlap = Math.sin(fFrame * 0.3) * 3;
+  fctx.ellipse(-4, 3 + wingFlap, 8, 5, -0.3, 0, Math.PI * 2);
+  fctx.fill();
+
+  // Eye
+  fctx.shadowBlur = 0;
+  fctx.fillStyle = '#fff';
+  fctx.beginPath();
+  fctx.arc(5, -3, 5, 0, Math.PI * 2);
+  fctx.fill();
+  fctx.fillStyle = BIRD_EYE;
+  fctx.beginPath();
+  fctx.arc(6, -3, 2.5, 0, Math.PI * 2);
+  fctx.fill();
+  // Highlight
+  fctx.fillStyle = '#fff';
+  fctx.beginPath();
+  fctx.arc(7, -4, 1, 0, Math.PI * 2);
+  fctx.fill();
+
+  // Beak
+  fctx.fillStyle = '#ff9900';
+  fctx.beginPath();
+  fctx.moveTo(12, -1); fctx.lineTo(19, 1); fctx.lineTo(12, 4);
+  fctx.closePath();
+  fctx.fill();
+
+  fctx.restore();
+}
+
+function checkCollision() {
+  // Ground / ceiling
+  if (bird.y + bird.r > FH - 50 || bird.y - bird.r < 0) return true;
+  // Pipes
+  for (const p of pipes) {
+    const bx = bird.x, by = bird.y, br = bird.r - 3; // slight forgiveness
+    if (bx + br > p.x + 4 && bx - br < p.x + PIPE_W - 4) {
+      if (by - br < p.topH || by + br > p.topH + PIPE_GAP) return true;
+    }
+  }
+  return false;
+}
+
+function flappyLoop() {
+  if (!flappyRunning) return;
+  fFrame++;
+
+  if (fStarted && !fGameOver) {
+    // Physics
+    bird.vy += GRAVITY;
+    bird.y  += bird.vy;
+
+    // Spawn pipes
+    if (fFrame % PIPE_INTERVAL === 0) spawnPipe();
+
+    // Move pipes & score
+    pipes.forEach(p => {
+      p.x -= PIPE_SPEED;
+      if (!p.scored && p.x + PIPE_W < bird.x) {
+        p.scored = true;
+        fScore++;
+        flappyScoreEl.textContent = fScore;
+        playTone(880, 'sine', 0.1, 0.2);
+      }
+    });
+    pipes = pipes.filter(p => p.x > -PIPE_W - 10);
+
+    // Collision
+    if (checkCollision()) {
+      fGameOver = true;
+      flappyRunning = false;
+      playFailureSound();
+      flappyWindow.classList.add('flappy-death-shake');
+      setTimeout(() => {
+        flappyWindow.classList.remove('flappy-death-shake');
+        onFlappyDeath(fScore);
+      }, 500);
+      return;
+    }
+  }
+
+  // Draw
+  drawScene();
+  drawPipes();
+  drawBird();
+
+  // "Press to start" text before first flap
+  if (!fStarted) {
+    fctx.fillStyle = 'rgba(255,255,255,0.8)';
+    fctx.font = 'bold 14px Segoe UI, Tahoma, sans-serif';
+    fctx.textAlign = 'center';
+    fctx.fillText('CLICK or SPACE to flap', FW / 2, FH / 2 + 60);
+    fctx.textAlign = 'left';
+  }
+
+  flappyAnimId = requestAnimationFrame(flappyLoop);
+}
+
+function onFlappyDeath(score) {
+  // Penalty: lose points based on how badly they failed
+  const penalty = score >= 3 ? -2 : -5;
+  realScore += penalty;
+  updateScoreDisplay();
+
+  flappyTitle.textContent   = score === 0 ? 'Verification Failed' : `Score: ${score} — Insufficient`;
+  flappySub.textContent     = score === 0
+    ? 'You didn\'t even try. −5 points.'
+    : `${score} pipe${score===1?'':'s'} cleared. Still not good enough. ${penalty} points.`;
+  flappyStartBtn.textContent = 'Try Again (you won\'t)';
+  flappyOverlay.classList.remove('hidden');
+
+  showToast('Verification Failed', `Score ${score} does not meet requirements.`);
+}
+
+function onFlappyWin(score) {
+  // "Win" — but it costs them anyway
+  realScore += 1; // pathetic reward
+  updateScoreDisplay();
+  flappyTitle.textContent = `Verified ✓ (Score: ${score})`;
+  flappySub.textContent   = 'Verification complete. +1 point.\nYou\'re welcome.';
+  flappyStartBtn.textContent = 'Close';
+  flappyOverlay.classList.remove('hidden');
+  showToast('Verification Complete', `+1 point awarded. Enjoy it.`);
+  playTone(1047, 'sine', 0.4, 0.2);
+}
+
+function startFlappyGame() {
+  resetFlappy();
+  flappyOverlay.classList.add('hidden');
+  flappyScoreEl.textContent = '0';
+  flappyRunning = true;
+  flappyAnimId = requestAnimationFrame(flappyLoop);
+}
+
+function openFlappyWindow() {
+  if (flappyActive) return;
+  flappyActive = true;
+  flappyWindow.classList.add('active');
+  flappyTaskbar.style.display = 'block';
+  resetFlappy();
+  drawScene(); // draw background on canvas immediately
+  flappyTitle.textContent    = 'Security Check Required';
+  flappySub.textContent      = 'Complete verification to continue.\nYour score depends on this.';
+  flappyStartBtn.textContent = 'Begin Verification';
+  flappyOverlay.classList.remove('hidden');
+  showToast('Action Required', 'Complete the security verification to proceed.');
+  playTone(440, 'square', 0.12, 0.15);
+  playTone(550, 'square', 0.12, 0.15, 0.12);
+}
+
+function closeFlappyWindow() {
+  flappyActive  = false;
+  flappyRunning = false;
+  if (flappyAnimId) { cancelAnimationFrame(flappyAnimId); flappyAnimId = null; }
+  flappyWindow.classList.remove('active');
+  flappyTaskbar.style.display = 'none';
+  // Closing without finishing costs points
+  if (!fGameOver && fStarted) {
+    realScore -= 3;
+    updateScoreDisplay();
+    showToast('Verification Abandoned', 'Score penalty applied. −3 points.');
+  }
+}
+
+// Start button / restart
+flappyStartBtn.addEventListener('click', () => {
+  if (flappyStartBtn.textContent === 'Close') {
+    closeFlappyWindow();
+  } else {
+    startFlappyGame();
+  }
+});
+
+// Flap on canvas click
+flappyCanvas.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (flappyRunning) flap();
+});
+
+// Flap on spacebar when window active
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && flappyActive && flappyRunning) {
+    e.preventDefault();
+    flap();
+  }
+});
+
+// Close X button
+document.getElementById('flappy-close-btn').addEventListener('click', closeFlappyWindow);
+
+// Check for win condition (score 10 in flappy = generous reward, still sucks)
+setInterval(() => {
+  if (flappyRunning && fScore >= 10 && !fGameOver) {
+    fGameOver = true;
+    flappyRunning = false;
+    cancelAnimationFrame(flappyAnimId);
+    drawScene(); drawPipes(); drawBird();
+    onFlappyWin(fScore);
+  }
+}, 100);
+
+// ==========================================
+// FLAPPY BIRD TRIGGER
+// ==========================================
+let flappyTriggeredTimes = 0;
+const MAX_FLAPPY_TRIGGERS = 3;
+let flappyTrigger1Done = false;
+let flappyTrigger2Done = false;
+let flappyTrigger3Done = false;
+
+function maybeOpenFlappy() {
+  if (flappyActive || flappyTriggeredTimes >= MAX_FLAPPY_TRIGGERS) return;
+  if (bsod.classList.contains('active')) return;
+  flappyTriggeredTimes++;
+  openFlappyWindow();
+}
+
+// Trigger 1: guaranteed after 8 clicks — early, unavoidable, before they know what's happening
+setInterval(() => {
+  if (flappyTrigger1Done || flappyActive) return;
+  if (clickCount >= 8) {
+    flappyTrigger1Done = true;
+    setTimeout(maybeOpenFlappy, 800);
+  }
+}, 500);
+
+// Trigger 2: guaranteed after 25 clicks
+setInterval(() => {
+  if (flappyTrigger2Done || !flappyTrigger1Done || flappyActive) return;
+  if (clickCount >= 25) {
+    flappyTrigger2Done = true;
+    setTimeout(maybeOpenFlappy, 1200);
+  }
+}, 500);
+
+// Trigger 3: guaranteed after 45 clicks
+setInterval(() => {
+  if (flappyTrigger3Done || !flappyTrigger2Done || flappyActive) return;
+  if (clickCount >= 45) {
+    flappyTrigger3Done = true;
+    setTimeout(maybeOpenFlappy, 600);
+  }
+}, 500);
+
+
+// Initial score display
+updateScoreDisplay(false);
+
+// Place button window on load and start roaming
+window.addEventListener('load', () => {
+  initWinPosition();
+  startRoaming();
+});
+</script>
+</body>
+</html>
