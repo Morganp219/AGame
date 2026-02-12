@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Definitely Normal Clicking Simulator</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    transition: all 0.2s;
+}
+
+#game {
+    text-align: center;
+    z-index: 2;
+}
+
+button {
+    padding: 20px 40px;
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+}
+
+.popup {
+    position: absolute;
+    background: red;
+    color: white;
+    padding: 8px;
+    font-size: 12px;
+    border: 2px solid black;
+    z-index: 999;
+}
+
+#upgrade {
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+.bsod {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:#0000aa;
+    color:white;
+    font-family: monospace;
+    padding:50px;
+    display:none;
+    z-index:10000;
+}
+
+.glitch {
+    animation: shake 0.1s infinite;
+}
+
+@keyframes shake {
+    0% { transform: translate(3px,3px); }
+    25% { transform: translate(-3px,-3px); }
+    50% { transform: translate(3px,-3px); }
+    75% { transform: translate(-3px,3px); }
+    100% { transform: translate(0,0); }
+}
+
+.invert { filter: invert(1); }
+.blur { filter: blur(3px); }
+
+.cursor-clone {
+    position:absolute;
+    width:10px;
+    height:10px;
+    background:black;
+    border-radius:50%;
+    pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<div id="game">
+    <h1 id="title">Totally Safe Clicking Simulator</h1>
+    <p id="counter">Clicks: 0</p>
+    <button id="clickBtn">Click Me</button>
+    <br>
+    <button id="upgrade">Buy Upgrade (100 clicks)</button>
+</div>
+
+<div class="bsod" id="bsod">
+A problem has been detected and Windows has been shut down to prevent damage.
+
+SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
+
+If this is the first time you've seen this stop error screen,
+restart your computer.
+
+Collecting data for crash dump...
+</div>
+
+<script>
+let clicks = 0;
+let lag = 0;
+let chaosLevel = 0;
+let autoClick = false;
+
+const btn = document.getElementById("clickBtn");
+const counter = document.getElementById("counter");
+const body = document.body;
+const upgrade = document.getElementById("upgrade");
+const bsod = document.getElementById("bsod");
+
+function randomMove(el) {
+    el.style.position = "absolute";
+    el.style.left = Math.random() * (window.innerWidth - 150) + "px";
+    el.style.top = Math.random() * (window.innerHeight - 80) + "px";
+}
+
+function popup(text) {
+    const p = document.createElement("div");
+    p.className = "popup";
+    p.innerText = text;
+    p.style.left = Math.random() * window.innerWidth + "px";
+    p.style.top = Math.random() * window.innerHeight + "px";
+    document.body.appendChild(p);
+}
+
+function fakeDownload() {
+    popup("Downloading Virus.exe...");
+    setTimeout(()=>popup("Installing Malware..."),500);
+}
+
+function createCursorClone(x,y) {
+    const c = document.createElement("div");
+    c.className = "cursor-clone";
+    c.style.left = x + "px";
+    c.style.top = y + "px";
+    document.body.appendChild(c);
+}
+
+document.addEventListener("mousemove",(e)=>{
+    if(chaosLevel > 4){
+        createCursorClone(e.pageX,e.pageY);
+    }
+});
+
+btn.addEventListener("click", () => {
+    setTimeout(()=>{
+        clicks++;
+        counter.innerText = "Clicks: " + clicks;
+
+        if(clicks > 10){
+            randomMove(btn);
+            lag += 20;
+        }
+
+        if(clicks > 20){
+            body.classList.add("glitch");
+        }
+
+        if(clicks > 30){
+            popup("CRITICAL ERROR");
+        }
+
+        if(clicks > 40){
+            body.classList.add("invert");
+            fakeDownload();
+        }
+
+        if(clicks > 60){
+            body.classList.add("blur");
+        }
+
+        if(clicks > 80){
+            document.body.style.transform = `rotate(${Math.random()*360}deg)`;
+        }
+
+        if(clicks > 120){
+            autoClick = true;
+        }
+
+        if(clicks > 200){
+            bsod.style.display = "block";
+        }
+
+    }, lag);
+});
+
+upgrade.addEventListener("click",()=>{
+    if(clicks >= 100){
+        clicks -= 100;
+        chaosLevel++;
+        popup("Upgrade Successful!");
+        lag += 50;
+        body.style.fontSize = (Math.random()*20+10)+"px";
+        randomMove(upgrade);
+    } else {
+        popup("Not enough clicks.");
+    }
+});
+
+setInterval(()=>{
+    if(autoClick){
+        btn.click();
+    }
+},200);
+
+setInterval(()=>{
+    if(chaosLevel > 2){
+        popup("SYSTEM COMPROMISED");
+    }
+},3000);
+
+</script>
+
+</body>
+</html>
