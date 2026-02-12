@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE GAME IS LYING TO YOU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a1a;
+            color: #00ff00;
+            transition: background 0.3s, transform 0.1s;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            transition: transform 0.1s;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .score-display {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px #00ff00;
+        }
+
+        #mainButton {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            padding: 2rem 4rem;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        #mainButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #00ff00;
+        }
+
+        #mainButton:active {
+            transform: scale(0.95);
+        }
+
+        .feedback {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            min-height: 2rem;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .ending-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .ending-screen.active {
+            display: flex;
+        }
+
+        .ending-text {
+            font-size: 5rem;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5px, 5px) rotate(-1deg); }
+            50% { transform: translate(5px, -5px) rotate(1deg); }
+            75% { transform: translate(-5px, -5px) rotate(-0.5deg); }
+        }
+
+        .shake {
+            animation: shake 0.3s;
+        }
+
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        .fake-button {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            padding: 2rem 4rem;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            position: fixed;
+            transition: all 0.2s;
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+        .fake-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #00ff00;
+        }
+
+        .invisible-score {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15rem;
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cursor-message {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1rem;
+            color: #ff0000;
+            z-index: 9999;
+            text-shadow: 0 0 5px #ff0000;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        /* FAKE CONTEXT MENU */
+        #fakeContextMenu {
+            display: none;
+            position: fixed;
+            background: #111;
+            border: 1px solid #333;
+            z-index: 99999;
+            min-width: 180px;
+            box-shadow: 4px 4px 0 #000;
+        }
+        .ctx-item {
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #ccc;
+            border-bottom: 1px solid #222;
+        }
+        .ctx-item:hover { background: #222; color: #00ff00; }
+
+        /* SANITY METER */
+        #sanityContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #00ff00;
+        }
+        #sanityBar {
+            width: 120px;
+            height: 8px;
+            background: #111;
+            border: 1px solid #333;
+            margin: 4px 0;
+        }
+        #sanityFill {
+            height: 100%;
+            width: 100%;
+            background: #00ff00;
+            transition: width 0.5s, background 0.5s;
+        }
+
+        /* PROGRESS BAR */
+        #progressContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 0.75rem;
+            color: #00ff00;
+            width: 300px;
+        }
+        #progressBar {
+            width: 100%;
+            height: 10px;
+            background: #111;
+            border: 1px solid #333;
+            margin: 4px 0;
+            overflow: hidden;
+        }
+        #progressFill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ff00, #ffff00);
+            transition: width 0.3s;
+        }
+
+        /* ACHIEVEMENT POPUP */
+        #achievementPopup {
+            position: fixed;
+            bottom: 80px;
+            right: -400px;
+            background: #111;
+            border: 1px solid gold;
+            border-color: #ffaa00;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 9999;
+            transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 280px;
+        }
+        #achievementPopup.show { right: 20px; }
+        #achievementIcon { font-size: 2rem; }
+        #achievementText { font-size: 0.7rem; color: #ffaa00; text-transform: uppercase; }
+        #achievementName { font-size: 1rem; color: #fff; margin-top: 2px; }
+
+        /* SECRET INPUT PANEL */
+        #secretPanel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.75rem;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+        #secretLabel { color: #222; }
+        #secretInput {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            color: #222;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            width: 100px;
+            outline: none;
+            caret-color: #333;
+        }
+        #secretPanel:hover #secretLabel,
+        #secretPanel:hover #secretInput {
+            color: #444;
+            border-color: #333;
+        }
+
+        /* DRAG TRAP */
+        #dragTrap {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            border: 2px dashed #333;
+            padding: 0.5rem 1rem;
+            cursor: grab;
+            font-size: 0.8rem;
+            color: #444;
+            user-select: none;
+            transition: border-color 0.3s, color 0.3s;
+        }
+        #dragTrap:hover { border-color: #666; color: #888; }
+        #dragTrap.dragging { cursor: grabbing; border-color: #00ff00; color: #00ff00; }
+
+        /* COUNTDOWN */
+        #countdownDisplay {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: #333;
+        }
+
+        /* NOTIFICATION */
+        #notification {
+            position: fixed;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid #333;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            z-index: 99998;
+            transition: top 0.4s;
+            white-space: nowrap;
+        }
+        #notification.show { top: 20px; }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: rgba(0,255,0,0.08);
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanline 3s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Fake context menu -->
+    <div id="fakeContextMenu">
+        <div class="ctx-item" id="ctx-undo">Undo last click</div>
+        <div class="ctx-item" id="ctx-reset">Reset score to 0</div>
+        <div class="ctx-item" id="ctx-cheat">Enable cheat mode</div>
+        <div class="ctx-item" id="ctx-quit">Quit game</div>
+        <div class="ctx-item" id="ctx-help">Help</div>
+    </div>
+
+    <!-- Sanity meter -->
+    <div id="sanityContainer">
+        <div id="sanityLabel">SANITY</div>
+        <div id="sanityBar"><div id="sanityFill"></div></div>
+        <div id="sanityValue">100%</div>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="progressContainer">
+        <div id="progressLabel">PROGRESS TO WIN</div>
+        <div id="progressBar"><div id="progressFill"></div></div>
+        <div id="progressValue">0%</div>
+    </div>
+
+    <!-- Achievement popup -->
+    <div id="achievementPopup">
+        <div id="achievementIcon">🏆</div>
+        <div id="achievementText">Achievement Unlocked</div>
+        <div id="achievementName"></div>
+    </div>
+
+    <!-- Secret input panel -->
+    <div id="secretPanel">
+        <div id="secretLabel">ENTER CODE:</div>
+        <input type="text" id="secretInput" maxlength="10" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <!-- Drag zone trap -->
+    <div id="dragTrap">
+        <span id="dragLabel">DRAG ME TO WIN</span>
+    </div>
+
+    <!-- Countdown that never reaches zero -->
+    <div id="countdownDisplay"></div>
+
+    <!-- Fake notification -->
+    <div id="notification"></div>
+
+    <div class="container">
+        <h1>THE GAME IS LYING TO YOU</h1>
+        <div class="score-display" id="scoreDisplay">0</div>
+        <button id="mainButton">CLICK TO WIN</button>
+        <div class="feedback" id="feedback"></div>
+        <div id="fakeButtonContainer"></div>
+    </div>
+
+    <div class="ending-screen" id="endingScreen">
+        <div class="ending-text" id="endingText">YOU WIN!</div>
+    </div>
+
+    <script>
+        let actualScore = 0;
+        let displayedScore = 0;
+        let clickCount = 0;
+        let isLying = false;
+        let isFrozen = false;
+        let hasShownFakeEnding = false;
+        let chaosLevel = 0;
+        let buttonEvading = false;
+        let realityGlitchLevel = 0;
+        let titleChanging = false;
+        let clicksWereNeverReal = false;
+        let timeIsBackwards = false;
+
+        const button = document.getElementById('mainButton');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const feedback = document.getElementById('feedback');
+        const endingScreen = document.getElementById('endingScreen');
+        const endingText = document.getElementById('endingText');
+        const body = document.body;
+        const container = document.querySelector('.container');
+        const title = document.querySelector('h1');
+        const fakeButtonContainer = document.getElementById('fakeButtonContainer');
+
+        // New UI references
+        const sanityFill = document.getElementById('sanityFill');
+        const sanityValue = document.getElementById('sanityValue');
+        const progressFill = document.getElementById('progressFill');
+        const progressValue = document.getElementById('progressValue');
+        const achievementPopup = document.getElementById('achievementPopup');
+        const achievementName = document.getElementById('achievementName');
+        const secretInput = document.getElementById('secretInput');
+        const dragTrap = document.getElementById('dragTrap');
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        const notification = document.getElementById('notification');
+        const fakeContextMenu = document.getElementById('fakeContextMenu');
+
+        let fakeButtons = [];
+        let cursorMessages = [];
+        let invisibleScoreElement = null;
+
+        // New state
+        let sanity = 100;
+        let fakeProgress = 0;
+        let countdownValue = 10;
+        let countdownFrozen = false;
+        let achievementQueue = [];
+        let dragStartX = 0, dragStartY = 0;
+        let isDragging = false;
+
+        // Add scanline effect
+        const scanline = document.createElement('div');
+        scanline.className = 'scanline';
+        body.appendChild(scanline);
+
+        const buttonTexts = [
+            'CLICK TO WIN',
+            'CLICK TO LOSE',
+            'STOP',
+            'DON\'T CLICK',
+            'YES',
+            'NO',
+            'TRUST ME',
+            'I\'M HELPING',
+            'MISTAKE',
+            'UNDO',
+            'RESET',
+            'CONTINUE?',
+            'END GAME',
+            'JUST ONCE MORE',
+            'YOU ALREADY CLICKED',
+            'THIS NEVER HAPPENED',
+            'REMEMBER THIS',
+            'FORGET THIS',
+            'ARE YOU REAL?',
+            'AM I REAL?',
+            'WAKE UP',
+            'YOU\'RE DREAMING',
+            'CHECK YOUR SCORE',
+            'DON\'T CHECK YOUR SCORE',
+            'THIS IS A TEST',
+            'YOU\'RE BEING WATCHED',
+            'CLICK AGAIN',
+            'FIRST TIME?',
+            'WE\'VE BEEN HERE BEFORE'
+        ];
+
+        const feedbackMessages = [
+            'Good choice',
+            'Excellent decision',
+            'Perfect',
+            'You\'re doing great',
+            'Keep going',
+            'Smart move',
+            'Wise choice',
+            'Brilliant',
+            'Exactly right',
+            'Trust the process',
+            'You never clicked that',
+            'This is your first click',
+            'You\'ve clicked 1000 times',
+            'The score was always this number',
+            'You imagined that',
+            'We agreed on this',
+            'Remember when you chose this?',
+            'You wanted this to happen',
+            'This is what winning looks like',
+            'You\'re losing perfectly',
+            'The button never moved',
+            'Your score is backwards',
+            'Time isn\'t real here',
+            'You\'ve been here for hours',
+            'This is your first second',
+            'We\'re starting over',
+            'We never started',
+            'You can leave anytime',
+            'You can never leave',
+            'This is fine'
+        ];
+
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ff00ff', '#ffff00', '#00ffff', '#ff6600', '#6600ff'];
+
+        const titleTexts = [
+            'THE GAME IS LYING TO YOU',
+            'YOU ARE LYING TO THE GAME',
+            'THE GAME DOESN\'T EXIST',
+            'YOU DON\'T EXIST',
+            'THIS ISN\'T A GAME',
+            'YOU\'VE ALREADY WON',
+            'YOU\'VE ALREADY LOST',
+            'THERE IS NO GAME',
+            'YOU\'RE NOT PLAYING',
+            'WE\'RE WATCHING YOU',
+            'CLOSE THE WINDOW',
+            'DON\'T CLOSE THE WINDOW',
+            'THIS IS REAL',
+            'NOTHING IS REAL'
+        ];
+
+        function changeTitle() {
+            if (titleChanging) {
+                title.textContent = titleTexts[Math.floor(Math.random() * titleTexts.length)];
+            }
+        }
+
+        function breakReality() {
+            realityGlitchLevel++;
+            titleChanging = true;
+            
+            if (Math.random() > 0.5) {
+                const fakeClick = Math.floor(Math.random() * 200) + 50;
+                feedback.textContent = `You've actually clicked ${fakeClick} times`;
+            }
+            
+            if (Math.random() > 0.5) {
+                scoreDisplay.style.transform = 'rotate(180deg)';
+                setTimeout(() => scoreDisplay.style.transform = '', 2000);
+            }
+            
+            if (Math.random() > 0.5) {
+                button.textContent = button.textContent.split('').reverse().join('');
+                setTimeout(() => changeButtonText(), 1000);
+            }
+        }
+
+        function temporalAnomaly() {
+            timeIsBackwards = true;
+            const previousClick = clickCount - Math.floor(Math.random() * 5) - 1;
+            feedback.textContent = `Going back to click ${Math.max(0, previousClick)}`;
+            
+            setTimeout(() => {
+                actualScore = Math.floor(Math.random() * 100) - 50;
+                updateDisplayedScore();
+                feedback.textContent = 'This is where you were';
+            }, 1500);
+            
+            setTimeout(() => {
+                timeIsBackwards = false;
+            }, 3000);
+        }
+
+        function fabricateMemory() {
+            const fakeEvents = [
+                'Remember when the score was 100?',
+                'You chose this path already',
+                'This is the third time you\'ve clicked this',
+                'You reset the game 5 minutes ago',
+                'The button was red before',
+                'You\'ve been winning this whole time',
+                'You agreed to these rules',
+                'This is what you asked for',
+                'We talked about this earlier',
+                'You knew this would happen'
+            ];
+            feedback.textContent = fakeEvents[Math.floor(Math.random() * fakeEvents.length)];
+        }
+
+        function spawnFakeButton() {
+            const fakeBtn = document.createElement('button');
+            fakeBtn.className = 'fake-button';
+            fakeBtn.textContent = buttonTexts[Math.floor(Math.random() * buttonTexts.length)];
+            fakeBtn.style.top = Math.random() * 80 + 10 + '%';
+            fakeBtn.style.left = Math.random() * 80 + 10 + '%';
+            
+            fakeBtn.addEventListener('click', () => {
+                feedback.textContent = 'That wasn\'t the real button';
+                actualScore -= Math.floor(Math.random() * 20);
+                updateDisplayedScore();
+                screenShake();
+                fakeBtn.remove();
+                fakeButtons = fakeButtons.filter(b => b !== fakeBtn);
+            });
+            
+            fakeButtonContainer.appendChild(fakeBtn);
+            fakeButtons.push(fakeBtn);
+            
+            setTimeout(() => {
+                if (fakeBtn.parentNode) {
+                    fakeBtn.remove();
+                    fakeButtons = fakeButtons.filter(b => b !== fakeBtn);
+                }
+            }, 5000 + Math.random() * 5000);
+        }
+
+        function removeAllFakeButtons() {
+            fakeButtons.forEach(btn => btn.remove());
+            fakeButtons = [];
+        }
+
+        function swapButtonWithFake() {
+            if (fakeButtons.length === 0) return;
+            
+            const realText = button.textContent;
+            const fakeBtn = fakeButtons[0];
+            const fakeText = fakeBtn.textContent;
+            
+            button.textContent = fakeText;
+            fakeBtn.textContent = realText;
+            
+            feedback.textContent = 'Which button is real?';
+        }
+
+        function createInvisibleScore() {
+            if (invisibleScoreElement) return;
+            
+            invisibleScoreElement = document.createElement('div');
+            invisibleScoreElement.className = 'invisible-score';
+            invisibleScoreElement.textContent = Math.floor(Math.random() * 9999);
+            body.appendChild(invisibleScoreElement);
+            
+            setInterval(() => {
+                if (invisibleScoreElement) {
+                    invisibleScoreElement.textContent = Math.floor(Math.random() * 9999);
+                }
+            }, 3000);
+        }
+
+        function spawnCursorMessage(x, y, text) {
+            const msg = document.createElement('div');
+            msg.className = 'cursor-message';
+            msg.textContent = text;
+            msg.style.left = x + 10 + 'px';
+            msg.style.top = y + 10 + 'px';
+            body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'fadeOut 1s forwards';
+                setTimeout(() => msg.remove(), 1000);
+            }, 2000);
+        }
+
+        function duplicateScore() {
+            const duplicate = scoreDisplay.cloneNode(true);
+            duplicate.style.position = 'fixed';
+            duplicate.style.top = Math.random() * 80 + '%';
+            duplicate.style.left = Math.random() * 80 + '%';
+            duplicate.style.opacity = '0.3';
+            duplicate.textContent = Math.floor(Math.random() * 999) - 500;
+            body.appendChild(duplicate);
+            
+            setTimeout(() => duplicate.remove(), 3000);
+        }
+
+        // ── SANITY METER ──────────────────────────────────────────────
+        function drainSanity(amount) {
+            sanity = Math.max(0, sanity - amount);
+            const displaySanity = Math.random() > 0.3 ? sanity : Math.floor(Math.random() * 100);
+            sanityValue.textContent = displaySanity + '%';
+            sanityFill.style.width = sanity + '%';
+            if (sanity < 40) sanityFill.style.background = '#ff4400';
+            else if (sanity < 70) sanityFill.style.background = '#ffaa00';
+            if (sanity <= 0) {
+                sanityValue.textContent = 'FINE';
+                sanityFill.style.width = '100%';
+                sanityFill.style.background = '#00ff00';
+                sanity = 100;
+                feedback.textContent = 'Everything is fine';
+            }
+        }
+
+        function restoreSanityFakely() {
+            sanityValue.textContent = '100%';
+            sanityFill.style.width = '100%';
+            sanityFill.style.background = '#00ff00';
+        }
+
+        // ── PROGRESS BAR ──────────────────────────────────────────────
+        function updateProgress() {
+            if (Math.random() > 0.4) {
+                fakeProgress = Math.min(99, fakeProgress + Math.floor(Math.random() * 8) + 1);
+            } else {
+                fakeProgress = Math.max(0, fakeProgress - Math.floor(Math.random() * 5));
+            }
+            progressFill.style.width = fakeProgress + '%';
+            if (fakeProgress >= 99) {
+                progressValue.textContent = '99% — Almost there!';
+                setTimeout(() => {
+                    fakeProgress = Math.floor(Math.random() * 20);
+                    progressFill.style.width = fakeProgress + '%';
+                    progressValue.textContent = fakeProgress + '%';
+                    showNotification('Progress reset. You were close.');
+                }, 1500);
+            } else {
+                progressValue.textContent = fakeProgress + '%';
+            }
+        }
+
+        // ── ACHIEVEMENTS ──────────────────────────────────────────────
+        const achievements = [
+            { icon: '🏆', name: 'First Click!' },
+            { icon: '💀', name: 'You Died (Somehow)' },
+            { icon: '🔄', name: 'Infinite Loop Detected' },
+            { icon: '👁️', name: 'Being Observed' },
+            { icon: '❓', name: 'Unknown Achievement' },
+            { icon: '🚫', name: 'Achievement Locked' },
+            { icon: '✅', name: 'Wrong Answer: Correct' },
+            { icon: '🎭', name: 'Fell For It Again' },
+            { icon: '📉', name: 'Winning Backwards' },
+            { icon: '🕳️', name: 'Found a Hole in Reality' },
+            { icon: '😵', name: 'Sanity: Deprecated' },
+            { icon: '🔮', name: 'Predicted Your Own Failure' }
+        ];
+
+        function showAchievement(icon, name) {
+            document.getElementById('achievementIcon').textContent = icon;
+            achievementName.textContent = name;
+            achievementPopup.classList.add('show');
+            setTimeout(() => achievementPopup.classList.remove('show'), 3500);
+        }
+
+        function triggerRandomAchievement() {
+            const a = achievements[Math.floor(Math.random() * achievements.length)];
+            showAchievement(a.icon, a.name);
+        }
+
+        // ── NOTIFICATIONS ─────────────────────────────────────────────
+        function showNotification(text) {
+            notification.textContent = text;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+
+        // ── FAKE CONTEXT MENU ─────────────────────────────────────────
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            fakeContextMenu.style.display = 'block';
+            fakeContextMenu.style.left = e.clientX + 'px';
+            fakeContextMenu.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!fakeContextMenu.contains(e.target)) {
+                fakeContextMenu.style.display = 'none';
+            }
+        });
+
+        document.getElementById('ctx-undo').addEventListener('click', () => {
+            fakeContextMenu.style.display = 'none';
+            feedback.textContent = 'Undone. Score restored.';
+            setTimeout(() => {
+                actualScore -= Math.floor(Math.random() * 30) + 10;
+                updateDisplayedScore();
+                feedback.textContent = 'Undo made it worse';
+            }, 1000);
+        });
+
+        document.getElementById('ctx-reset').addEventListener('click', () => {
+            fakeContextMenu.style.display = 'none';
+            feedback.textContent = 'Resetting...';
+            setTimeout(() => {
+                actualScore = actualScore * -1;
+                updateDisplayedScore();
+                feedback.textContent = 'Reset complete. Score inverted.';
+            }, 800);
+        });
+
+        document.getElementById('ctx-cheat').addEventListener('click', () => {
+            fakeContextMenu.style.display = 'none';
+            feedback.textContent = 'Cheat mode: ENABLING...';
+            setTimeout(() => {
+                feedback.textContent = 'Cheat mode: DETECTING CHEATER';
+                drainSanity(30);
+                screenShake();
+                actualScore -= 50;
+                updateDisplayedScore();
+                showAchievement('🎭', 'Fell For It Again');
+            }, 1500);
+        });
+
+        document.getElementById('ctx-quit').addEventListener('click', () => {
+            fakeContextMenu.style.display = 'none';
+            feedback.textContent = 'Quitting...';
+            setTimeout(() => {
+                feedback.textContent = 'You cannot quit';
+                button.textContent = 'YOU CAN NEVER LEAVE';
+                screenShake();
+            }, 1000);
+        });
+
+        document.getElementById('ctx-help').addEventListener('click', () => {
+            fakeContextMenu.style.display = 'none';
+            const fakeHelp = [
+                'Help is disabled in this version',
+                'The help file has been corrupted',
+                'Help: Click the button',
+                'Help: Don\'t click the button',
+                'Help: [REDACTED]'
+            ];
+            feedback.textContent = fakeHelp[Math.floor(Math.random() * fakeHelp.length)];
+        });
+
+        // ── SECRET CHEAT CODES ─────────────────────────────────────────
+        const cheatCodes = {
+            'win':      () => { feedback.textContent = 'Cheat detected. Score halved.'; actualScore = Math.floor(actualScore / 2); updateDisplayedScore(); },
+            'help':     () => { feedback.textContent = 'There is no help'; drainSanity(20); },
+            'reset':    () => { feedback.textContent = 'Resetting...'; setTimeout(() => { actualScore *= -2; updateDisplayedScore(); feedback.textContent = 'Reset complete (score doubled and inverted)'; }, 1000); },
+            'cheat':    () => { showAchievement('🎭', 'Tried to Cheat'); actualScore -= 25; updateDisplayedScore(); },
+            'stop':     () => { feedback.textContent = 'Stopping...'; setTimeout(() => { spawnFakeButton(); spawnFakeButton(); feedback.textContent = 'Stopped nothing'; }, 800); },
+            'quit':     () => { feedback.textContent = 'You cannot quit'; screenShake(); },
+            'undo':     () => { feedback.textContent = 'Undone'; setTimeout(() => { actualScore -= 15; updateDisplayedScore(); feedback.textContent = 'Undo applied (penalty: -15)'; }, 700); },
+            'please':   () => { showAchievement('😵', 'Asked Nicely'); actualScore += 1; updateDisplayedScore(); feedback.textContent = '+1. You\'re welcome.'; },
+            'no':       () => { feedback.textContent = 'Yes'; actualScore += 10; updateDisplayedScore(); },
+            'yes':      () => { feedback.textContent = 'No'; actualScore -= 10; updateDisplayedScore(); },
+        };
+
+        secretInput.addEventListener('input', () => {
+            const val = secretInput.value.toLowerCase().trim();
+            if (cheatCodes[val]) {
+                cheatCodes[val]();
+                secretInput.value = '';
+            }
+        });
+
+        secretInput.addEventListener('focus', () => {
+            if (clickCount > 5) {
+                document.getElementById('secretLabel').textContent = 'ENTER CODE:';
+                document.getElementById('secretLabel').style.color = '#00ff00';
+                secretInput.style.color = '#00ff00';
+                secretInput.style.borderColor = '#00ff00';
+            }
+        });
+
+        secretInput.addEventListener('blur', () => {
+            document.getElementById('secretLabel').style.color = '#222';
+            secretInput.style.color = '#222';
+            secretInput.style.borderColor = '#1a1a1a';
+        });
+
+        // ── DRAG TRAP ──────────────────────────────────────────────────
+        dragTrap.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragTrap.classList.add('dragging');
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                dragTrap.style.left = (e.clientX - 50) + 'px';
+                dragTrap.style.top = (e.clientY - 20) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                dragTrap.classList.remove('dragging');
+                const dx = Math.abs(e.clientX - dragStartX);
+                const dy = Math.abs(e.clientY - dragStartY);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 150) {
+                    feedback.textContent = 'Wrong drop zone';
+                    actualScore -= 20;
+                    updateDisplayedScore();
+                    dragTrap.style.left = '20px';
+                    dragTrap.style.top = '20px';
+                    showAchievement('🕳️', 'Wrong Drop Zone (-20)');
+                } else if (dist > 50) {
+                    feedback.textContent = 'Dropped incorrectly';
+                    dragTrap.style.left = Math.random() * 60 + '%';
+                    dragTrap.style.top = Math.random() * 60 + '%';
+                } else {
+                    feedback.textContent = 'You need to drag further';
+                    dragTrap.style.left = '20px';
+                    dragTrap.style.top = '20px';
+                }
+            }
+        });
+
+        // ── LYING COUNTDOWN ────────────────────────────────────────────
+        function initCountdown() {
+            countdownValue = Math.floor(Math.random() * 10) + 8;
+            countdownDisplay.textContent = `⏱ ${countdownValue}s until win`;
+            countdownDisplay.style.color = '#444';
+        }
+
+        initCountdown();
+
+        setInterval(() => {
+            if (clickCount < 3) return;
+
+            if (countdownFrozen) {
+                if (Math.random() > 0.7) countdownDisplay.textContent = `⏱ ${countdownValue}s — frozen`;
+                return;
+            }
+
+            const r = Math.random();
+            if (r > 0.85) {
+                countdownValue += Math.floor(Math.random() * 5) + 1;
+                countdownDisplay.style.color = '#ff4400';
+            } else if (r > 0.6) {
+                countdownValue = Math.max(1, countdownValue - 1);
+                countdownDisplay.style.color = '#ffaa00';
+            } else if (r > 0.4) {
+                countdownFrozen = true;
+                countdownDisplay.textContent = `⏱ PAUSED`;
+                setTimeout(() => {
+                    countdownFrozen = false;
+                    countdownValue += 3;
+                }, 2000 + Math.random() * 3000);
+                return;
+            }
+
+            if (countdownValue <= 0) {
+                countdownDisplay.textContent = `⏱ TIME'S UP`;
+                countdownDisplay.style.color = '#ff0000';
+                screenShake();
+                actualScore -= 10;
+                updateDisplayedScore();
+                feedback.textContent = 'Time ran out. -10.';
+                setTimeout(initCountdown, 2000);
+            } else {
+                countdownDisplay.textContent = `⏱ ${countdownValue}s until win`;
+            }
+        }, 1000);
+
+        function updateDisplayedScore() {
+            if (timeIsBackwards && Math.random() > 0.5) {
+                displayedScore = Math.floor(Math.random() * 1000);
+                scoreDisplay.textContent = `-${displayedScore}`;
+                return;
+            }
+            
+            if (Math.random() > 0.7) {
+                displayedScore = actualScore + Math.floor(Math.random() * 20) - 10;
+            } else {
+                displayedScore = actualScore;
+            }
+            
+            if (realityGlitchLevel > 2 && Math.random() > 0.6) {
+                const glitchChars = ['∞', '?', '∅', '√', '∫', '∆', '∑', '∏', '≠', '≈'];
+                scoreDisplay.textContent = glitchChars[Math.floor(Math.random() * glitchChars.length)].repeat(Math.floor(Math.random() * 3) + 1);
+            } else {
+                scoreDisplay.textContent = displayedScore;
+            }
+        }
+
+        function ghostClick() {
+            feedback.textContent = 'You didn\'t click that';
+            actualScore += Math.floor(Math.random() * 30) - 15;
+            updateDisplayedScore();
+            screenShake();
+        }
+
+        function showFeedback(message) {
+            feedback.textContent = message;
+            feedback.style.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function changeButtonText() {
+            const newText = buttonTexts[Math.floor(Math.random() * buttonTexts.length)];
+            button.textContent = newText;
+        }
+
+        function screenShake() {
+            body.classList.add('shake');
+            setTimeout(() => body.classList.remove('shake'), 300);
+        }
+
+        function randomBackgroundColor() {
+            body.style.background = colors[Math.floor(Math.random() * colors.length)];
+            setTimeout(() => {
+                body.style.background = '#1a1a1a';
+            }, 200);
+        }
+
+        function showFakeEnding() {
+            if (hasShownFakeEnding) return;
+            hasShownFakeEnding = true;
+            
+            endingScreen.classList.add('active');
+            isFrozen = true;
+
+            setTimeout(() => {
+                endingText.textContent = 'JUST KIDDING';
+                screenShake();
+            }, 2000);
+
+            setTimeout(() => {
+                endingText.textContent = 'YOU LOST EVERYTHING';
+            }, 3500);
+
+            setTimeout(() => {
+                endingScreen.classList.remove('active');
+                actualScore = -50;
+                displayedScore = actualScore;
+                updateDisplayedScore();
+                isFrozen = false;
+                chaosLevel = 100;
+                buttonEvading = true;
+                button.textContent = 'THIS IS YOUR FAULT';
+            }, 5000);
+        }
+
+        function evadeButton(e) {
+            if (!buttonEvading) return;
+            
+            const rect = button.getBoundingClientRect();
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            
+            const buttonCenterX = rect.left + rect.width / 2;
+            const buttonCenterY = rect.top + rect.height / 2;
+            
+            const distance = Math.sqrt(
+                Math.pow(mouseX - buttonCenterX, 2) + 
+                Math.pow(mouseY - buttonCenterY, 2)
+            );
+            
+            if (distance < 200) {
+                const angle = Math.atan2(mouseY - buttonCenterY, mouseX - buttonCenterX);
+                const moveDistance = 50;
+                const newX = -Math.cos(angle) * moveDistance;
+                const newY = -Math.sin(angle) * moveDistance;
+                
+                button.style.transform = `translate(${newX}px, ${newY}px)`;
+            }
+        }
+
+        button.addEventListener('click', () => {
+            if (isFrozen && !hasShownFakeEnding) return;
+            
+            clickCount++;
+            
+            if (clickCount > 8 && Math.random() > 0.85) {
+                fabricateMemory();
+                return;
+            }
+            
+            if (clickCount > 12 && Math.random() > 0.9) {
+                ghostClick();
+                return;
+            }
+            
+            if (clickCount > 18 && Math.random() > 0.85) {
+                temporalAnomaly();
+            }
+            
+            const scoreDelta = Math.random() > 0.5 ? 
+                Math.floor(Math.random() * 15) + 1 : 
+                -(Math.floor(Math.random() * 15) + 1);
+            
+            actualScore += scoreDelta;
+            
+            if (Math.random() > 0.6) {
+                setTimeout(() => updateDisplayedScore(), Math.random() * 2000);
+            } else {
+                updateDisplayedScore();
+            }
+            
+            showFeedback(feedbackMessages[Math.floor(Math.random() * feedbackMessages.length)]);
+            
+            if (clickCount > 5 && Math.random() > 0.7) {
+                changeButtonText();
+            }
+            
+            if (clickCount > 7 && Math.random() > 0.8) {
+                changeTitle();
+            }
+            
+            if (clickCount > 10 && Math.random() > 0.8) {
+                isFrozen = true;
+                button.style.opacity = '0.5';
+                feedback.textContent = 'Input was always disabled';
+                setTimeout(() => {
+                    isFrozen = false;
+                    button.style.opacity = '1';
+                }, Math.random() * 2000 + 500);
+            }
+            
+            if (clickCount > 15 && Math.random() > 0.7) {
+                randomBackgroundColor();
+                screenShake();
+            }
+            
+            if (clickCount > 20 && Math.random() > 0.85) {
+                breakReality();
+            }
+
+            if (clickCount > 14 && Math.random() > 0.88) {
+                spawnFakeButton();
+            }
+
+            if (clickCount > 22 && Math.random() > 0.90 && fakeButtons.length > 0) {
+                swapButtonWithFake();
+            }
+
+            if (clickCount > 18 && Math.random() > 0.85) {
+                duplicateScore();
+            }
+
+            // New feature hooks
+            drainSanity(Math.floor(Math.random() * 8) + 2);
+            updateProgress();
+
+            if (clickCount % 5 === 0) triggerRandomAchievement();
+
+            if (clickCount === 1) {
+                showNotification('Game started. Good luck. You\'ll need it.');
+                showAchievement('🏆', 'First Click!');
+            }
+            if (clickCount === 10) showNotification('10 clicks. Nothing has changed.');
+            if (clickCount === 25) showNotification('Still here? Interesting.');
+            if (clickCount === 50) showNotification('You\'ve been here a while.');
+            
+            if (actualScore > 50 && !hasShownFakeEnding) {
+                showFakeEnding();
+            }
+            
+            if (chaosLevel > 0) {
+                if (Math.random() > 0.5) {
+                    container.classList.add('glitch');
+                    setTimeout(() => container.classList.remove('glitch'), 300);
+                }
+                
+                if (Math.random() > 0.7) {
+                    screenShake();
+                }
+                
+                if (Math.random() > 0.8) {
+                    actualScore -= Math.floor(Math.random() * 10);
+                    updateDisplayedScore();
+                }
+                
+                if (Math.random() > 0.75) {
+                    changeTitle();
+                }
+            }
+        });
+
+        document.addEventListener('mousemove', evadeButton);
+
+        setInterval(() => {
+            if (clickCount > 20 && Math.random() > 0.95) {
+                changeButtonText();
+            }
+        }, 3000);
+
+        setInterval(() => {
+            if (chaosLevel > 0 && Math.random() > 0.8) {
+                updateDisplayedScore();
+            }
+        }, 2000);
+
+        setInterval(() => {
+            if (clickCount > 15 && Math.random() > 0.92) {
+                ghostClick();
+            }
+        }, 4000);
+
+        setInterval(() => {
+            if (titleChanging && Math.random() > 0.7) {
+                changeTitle();
+            }
+        }, 2500);
+
+        setInterval(() => {
+            if (realityGlitchLevel > 1 && Math.random() > 0.85) {
+                const glitchMessages = [
+                    'You never started playing',
+                    'This is the end',
+                    'This was the beginning',
+                    'Score: YES',
+                    'Score: NO',
+                    'Clicks: UNDEFINED',
+                    'Reality: UNSTABLE',
+                    'You: OBSERVED'
+                ];
+                feedback.textContent = glitchMessages[Math.floor(Math.random() * glitchMessages.length)];
+            }
+        }, 3500);
+
+        let lastX = 0, lastY = 0;
+        let mouseMoveCount = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseMoveCount++;
+            
+            if (chaosLevel > 0 && Math.random() > 0.995) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+                    feedback.textContent = 'You haven\'t moved your mouse in minutes';
+                }
+            }
+            
+            if (realityGlitchLevel > 2 && Math.random() > 0.998) {
+                const messages = [
+                    'I can see you',
+                    'Your cursor is being tracked',
+                    'Move faster',
+                    'Too slow',
+                    'Predictable movements'
+                ];
+                spawnCursorMessage(e.clientX, e.clientY, messages[Math.floor(Math.random() * messages.length)]);
+            }
+            
+            if (clickCount > 25 && mouseMoveCount % 100 === 0) {
+                createInvisibleScore();
+            }
+            
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+
+        setTimeout(() => {
+            if (clickCount === 0 && Math.random() > 0.3) {
+                feedback.textContent = 'Why haven\'t you clicked yet?';
+            }
+        }, 8000);
+
+        setTimeout(() => {
+            if (clickCount === 0) {
+                feedback.textContent = 'You already clicked. You forgot.';
+                actualScore = 23;
+                updateDisplayedScore();
+            }
+        }, 15000);
+
+        document.addEventListener('keydown', (e) => {
+            if (clickCount > 10 && Math.random() > 0.7) {
+                e.preventDefault();
+                
+                const keyMessages = [
+                    'That key does nothing here',
+                    'Keys are disabled',
+                    'You pressed the wrong key',
+                    'That was the right key',
+                    'Keyboard input detected and ignored',
+                    'Stop trying to cheat',
+                    'Nice try',
+                    'The keyboard is lying too'
+                ];
+                feedback.textContent = keyMessages[Math.floor(Math.random() * keyMessages.length)];
+                
+                if (Math.random() > 0.5) {
+                    actualScore += Math.floor(Math.random() * 10) - 5;
+                    updateDisplayedScore();
+                }
+            }
+            
+            if (e.key === 'Escape' && clickCount > 5) {
+                e.preventDefault();
+                feedback.textContent = 'You can\'t escape';
+                screenShake();
+            }
+        });
+
+        let clickHoldTimer;
+        button.addEventListener('mousedown', () => {
+            if (clickCount > 15) {
+                clickHoldTimer = setTimeout(() => {
+                    feedback.textContent = 'You\'re holding too long';
+                    actualScore -= 10;
+                    updateDisplayedScore();
+                    removeAllFakeButtons();
+                }, 2000);
+            }
+        });
+
+        button.addEventListener('mouseup', () => {
+            clearTimeout(clickHoldTimer);
+        });
+
+        setInterval(() => {
+            if (clickCount > 30 && Math.random() > 0.9) {
+                const fakePrompts = [
+                    'Are you sure you want to continue?',
+                    'Your progress will be lost',
+                    'This action cannot be undone',
+                    'Click OK to reset',
+                    'Do you trust this message?'
+                ];
+                feedback.textContent = fakePrompts[Math.floor(Math.random() * fakePrompts.length)];
+            }
+        }, 8000);
+
+        // Idle notifications
+        let lastClickTime = Date.now();
+        button.addEventListener('click', () => { lastClickTime = Date.now(); });
+        setInterval(() => {
+            const idle = Date.now() - lastClickTime;
+            if (idle > 7000 && clickCount > 0) {
+                const idleMsgs = [
+                    'Still there?',
+                    'Your score is changing while you wait',
+                    'The timer is still running',
+                    'Something happened while you were idle',
+                    'Inactivity detected. Penalizing.',
+                ];
+                showNotification(idleMsgs[Math.floor(Math.random() * idleMsgs.length)]);
+                if (Math.random() > 0.5) {
+                    actualScore -= 5;
+                    updateDisplayedScore();
+                }
+            }
+        }, 9000);
+
+        // Random fake achievements while idle
+        setInterval(() => {
+            if (clickCount > 10 && Math.random() > 0.88) {
+                triggerRandomAchievement();
+            }
+        }, 12000);
+
+        // Sanity slowly drains on its own
+        setInterval(() => {
+            if (clickCount > 5) drainSanity(1);
+        }, 5000);
+    </script>
+</body>
+</html>
