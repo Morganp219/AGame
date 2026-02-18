@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Game Is Lying To You</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --glitch-color: #00ff00;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .glitch-text {
+            text-shadow: 2px 0 #ff00ea, -2px 0 #00ffea;
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        canvas {
+            display: block;
+            background: #000;
+            max-width: 100%;
+            max-height: 80vh;
+            border: 2px solid #333;
+        }
+
+        .btn-evil {
+            background: #fff;
+            color: #000;
+            padding: 15px 30px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-evil:hover {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        #message-box {
+            position: fixed;
+            bottom: 20px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid red;
+            padding: 10px;
+            font-size: 12px;
+            max-width: 300px;
+            display: none;
+            z-index: 100;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Fake Blue Screen */
+        #bsod {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0000aa;
+            color: white;
+            padding: 50px;
+            display: none;
+            z-index: 9999;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #sad-face {
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        #sad-face:hover {
+            transform: scale(1.1) rotate(5deg);
+            color: #ff00ea;
+        }
+
+        /* True Win Screen */
+        #true-win {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            color: black;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #audio-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #444;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="audio-status">AUDIO: OFFLINE</div>
+
+<div id="bsod">
+    <h1 id="sad-face" style="font-size: 4rem;" onclick="triggerTrueWin()">:(</h1>
+    <p class="mt-4">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</p>
+    <p id="bsod-percent">0% complete</p>
+    <p style="margin-top: 20px; font-size: 0.8rem;">Stop Code: CRITICAL_PROCESS_DIED_FROM_WINNING</p>
+    <div id="bsod-actions" class="mt-8 hidden">
+        <button onclick="rebootSimulation()" class="btn-evil">RESTART SYSTEM</button>
+    </div>
+</div>
+
+<div id="true-win">
+    <h1 class="text-6xl font-bold mb-4">THE TRUTH</h1>
+    <p class="text-2xl mb-8">You found the exit. The game is no longer lying.</p>
+    <p class="max-w-md italic mb-8">"The only winning move was to stop believing the interface."</p>
+    <div class="p-8 border-4 border-black">
+        <p class="font-bold">CERTIFICATE OF AUTHENTICITY</p>
+        <p>This player has officially beaten the lie.</p>
+    </div>
+    <button onclick="location.reload()" class="mt-12 underline">Back to the beginning</button>
+</div>
+
+<div id="game-container">
+    <!-- PHASE 1: THE CLICKER -->
+    <div id="phase-clicker" class="flex flex-col items-center">
+        <h1 id="clicker-title" class="text-4xl mb-8 glitch-text">CLICK TO WIN!</h1>
+        <div id="clicker-stats" class="mb-4 text-xl">
+            Score: <span id="score">0</span>
+        </div>
+        <button id="main-button" class="btn-evil">WIN THE GAME</button>
+        <p id="clicker-sub" class="mt-4 text-gray-500 italic">Progress is mandatory.</p>
+    </div>
+
+    <!-- PHASE 2: THE CANVAS GAMES -->
+    <div id="phase-canvas" class="hidden flex flex-col items-center">
+        <h2 id="canvas-title" class="text-2xl mb-2 text-red-500">SYSTEM CORRUPTED</h2>
+        <div class="relative">
+            <canvas id="gameCanvas"></canvas>
+            <div id="canvas-ui" class="absolute top-4 left-4 text-white text-lg font-bold pointer-events-none">
+                LIVES: 999
+            </div>
+        </div>
+    </div>
+
+    <!-- GLOBAL UI -->
+    <div id="message-box"></div>
+</div>
+
+<script>
+
+
+    class SoundManager {
+        constructor() {
+            this.enabled = false;
+            this.currentMusic = null;
+            this.sounds = {};
+            this.music = {};
+        }
+
+        init() {
+            if (this.enabled) return;
+            this.enabled = true;
+            document.getElementById('audio-status').innerText = "AUDIO: ONLINE";
+            document.getElementById('audio-status').style.color = "#0f0";
+            
+            // Initialize music objects
+            this.music.main = this.createAudio(AUDIO_ASSETS.bg_main, true);
+            this.music.glitch = this.createAudio(AUDIO_ASSETS.bg_glitch, true);
+            this.music.bsod = this.createAudio(AUDIO_ASSETS.bg_bsod, true);
+            this.music.win = this.createAudio(AUDIO_ASSETS.bg_win, true);
+
+            // Initialize SFX objects
+            this.sounds.click = this.createAudio(AUDIO_ASSETS.sfx_click);
+            this.sounds.jump = this.createAudio(AUDIO_ASSETS.sfx_jump);
+            this.sounds.error = this.createAudio(AUDIO_ASSETS.sfx_error);
+            this.sounds.reboot = this.createAudio(AUDIO_ASSETS.sfx_reboot);
+            this.sounds.reveal = this.createAudio(AUDIO_ASSETS.sfx_win_reveal);
+            
+            this.playMusic('main');
+        }
+
+        createAudio(src, loop = false) {
+            if (!src) return { play: () => {}, stop: () => {}, pause: () => {} };
+            const audio = new Audio(src);
+            audio.loop = loop;
+            return audio;
+        }
+
+        playMusic(key) {
+            if (!this.enabled || !this.music[key]) return;
+            if (this.currentMusic) {
+                this.music[this.currentMusic].pause();
+                this.music[this.currentMusic].currentTime = 0;
+            }
+            this.music[key].play().catch(e => console.log("Audio play blocked"));
+            this.currentMusic = key;
+        }
+
+        playSfx(key) {
+            if (!this.enabled || !this.sounds[key]) return;
+            // Clone node to allow rapid overlapping sounds
+            const s = this.sounds[key].cloneNode();
+            s.play().catch(e => {});
+        }
+    }
+
+    const soundManager = new SoundManager();
+
+    // ==========================================
+    // GAME ENGINE
+    // ==========================================
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const msgBox = document.getElementById('message-box');
+    const mainBtn = document.getElementById('main-button');
+    const clickerTitle = document.getElementById('clicker-title');
+    
+    let state = {
+        phase: 'clicker',
+        score: 0,
+        realScore: 0,
+        lives: 999,
+        clickerPhase: 0,
+        miniGame: null,
+        gameRunning: false,
+        loops: 0
+    };
+
+    const CANVAS_WIDTH = 600;
+    const CANVAS_HEIGHT = 400;
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    function showMessage(text, duration = 3000) {
+        msgBox.innerText = text;
+        msgBox.style.display = 'block';
+        setTimeout(() => msgBox.style.display = 'none', duration);
+    }
+
+    // --- PHASE 1: CLICKER LOGIC ---
+    mainBtn.addEventListener('mouseover', () => {
+        if (state.clickerPhase >= 1) {
+            const x = Math.random() * (window.innerWidth - 200);
+            const y = Math.random() * (window.innerHeight - 100);
+            mainBtn.style.position = 'fixed';
+            mainBtn.style.left = x + 'px';
+            mainBtn.style.top = y + 'px';
+        }
+    });
+
+    mainBtn.addEventListener('click', () => {
+        // Initialize audio on first click
+        soundManager.init();
+        soundManager.playSfx('click');
+
+        state.realScore++;
+        
+        if (state.realScore < 5) {
+            state.score += 100;
+            showMessage("Good job! You're winning!");
+        } else if (state.realScore < 10) {
+            state.score -= 50;
+            state.clickerPhase = 1;
+            mainBtn.innerText = "DONT CLICK";
+            showMessage("Wait, stop that.");
+        } else if (state.realScore < 15) {
+            state.score = "ERROR";
+            mainBtn.innerText = "???";
+            showMessage("You are breaking the rules.");
+        } else {
+            transitionToMiniGame('flappy');
+        }
+        
+        scoreEl.innerText = state.score;
+    });
+
+    function transitionToMiniGame(type) {
+        soundManager.playMusic('glitch');
+        document.getElementById('phase-clicker').classList.add('hidden');
+        document.getElementById('phase-canvas').classList.remove('hidden');
+        state.phase = 'canvas';
+        state.miniGame = type;
+        state.gameRunning = true;
+        
+        if (type === 'flappy') initFlappy();
+        else if (type === 'runner') initRunner();
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+    // --- MINI GAMES ---
+    let flappy = { y: 200, v: 0, gravity: 0.4, jump: -7, pipes: [], pipeTimer: 0 };
+    function initFlappy() {
+        document.getElementById('canvas-title').innerText = "AVOID THE PIPES!";
+        flappy.pipes = [];
+        flappy.y = 200;
+        flappy.v = 0;
+        flappy.pipeTimer = 0;
+        showMessage("Standard rules apply. Don't touch anything.");
+    }
+
+    function updateFlappy() {
+        flappy.v += flappy.gravity;
+        flappy.y += flappy.v;
+        if (flappy.pipeTimer++ % 90 === 0) {
+            let hole = 150 - (state.loops * 10);
+            let pos = Math.random() * (CANVAS_HEIGHT - hole - 100) + 50;
+            flappy.pipes.push({ x: CANVAS_WIDTH, top: pos, bottom: pos + hole, width: 50 });
+        }
+        flappy.pipes.forEach((p, i) => {
+            p.x -= (3 + state.loops);
+            if (p.x < 100 && p.x + p.width > 50) {
+                if (flappy.y < p.top || flappy.y > p.bottom) {
+                    state.realScore++;
+                    soundManager.playSfx('error');
+                    if (state.realScore > (25 + state.loops * 5)) transitionToMiniGame('runner');
+                    else {
+                        showMessage("CRITICAL ERROR: COLLISION DETECTED.");
+                        flappy.pipes.splice(i, 1);
+                    }
+                }
+            }
+        });
+        if (flappy.pipes[0]?.x < -50) flappy.pipes.shift();
+        if (flappy.y > CANVAS_HEIGHT || flappy.y < 0) { flappy.y = 200; flappy.v = 0; }
+    }
+
+    let runner = { playerX: 0, obstacles: [], timer: 0, speed: 5 };
+    function initRunner() {
+        document.getElementById('canvas-title').innerText = "COLLECT THE COINS";
+        runner.obstacles = [];
+        runner.playerX = 0;
+        runner.timer = 0;
+        runner.speed = 5 + state.loops;
+    }
+
+    function updateRunner() {
+        runner.timer++;
+        if (runner.timer % 30 === 0) {
+            runner.obstacles.push({
+                z: 1000,
+                x: (Math.random() - 0.5) * 400,
+                type: Math.random() > 0.5 ? 'coin' : 'bomb'
+            });
+        }
+        runner.obstacles.forEach((o, i) => {
+            o.z -= runner.speed;
+            if (o.z < 0) {
+                if (Math.abs(o.x - runner.playerX) < 50) {
+                    soundManager.playSfx('error');
+                    if (o.type === 'coin') {
+                        state.lives--;
+                        showMessage("PENALTY APPLIED.");
+                    } else {
+                        showMessage("STRENGTH INCREASED.");
+                    }
+                }
+                runner.obstacles.splice(i, 1);
+            }
+        });
+        if (state.lives < (990 - state.loops)) {
+            state.gameRunning = false;
+            triggerBSOD();
+        }
+    }
+
+    // --- RENDERING ---
+    function drawFlappy() {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.fillStyle = '#0f0';
+        flappy.pipes.forEach(p => {
+            ctx.fillRect(p.x, 0, p.width, p.top);
+            ctx.fillRect(p.x, p.bottom, p.width, CANVAS_HEIGHT - p.bottom);
+        });
+        ctx.fillStyle = '#fff'; ctx.font = '20px Space Mono';
+        ctx.fillText('WINNER', 50, flappy.y);
+    }
+
+    function drawRunner() {
+        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.strokeStyle = '#333'; ctx.beginPath(); ctx.moveTo(0, CANVAS_HEIGHT / 2); ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2); ctx.stroke();
+        runner.obstacles.forEach(o => {
+            let scale = 100 / (o.z + 1);
+            let screenX = CANVAS_WIDTH / 2 + (o.x - runner.playerX) * scale;
+            let screenY = CANVAS_HEIGHT / 2 + 100 * scale;
+            let size = 5000 / (o.z + 1);
+            ctx.fillStyle = o.type === 'coin' ? '#ffd700' : '#ff0000';
+            ctx.fillRect(screenX - size/2, screenY - size/2, size, size);
+        });
+        ctx.strokeStyle = '#0f0'; ctx.strokeRect(CANVAS_WIDTH/2 - 25, CANVAS_HEIGHT - 60, 50, 50);
+        document.getElementById('canvas-ui').innerText = `LIVES: ${state.lives}`;
+    }
+
+    function gameLoop() {
+        if (!state.gameRunning) return;
+        if (state.miniGame === 'flappy') { updateFlappy(); drawFlappy(); }
+        else if (state.miniGame === 'runner') { updateRunner(); drawRunner(); }
+        requestAnimationFrame(gameLoop);
+    }
+
+    // --- SYSTEM LOGIC ---
+    function triggerBSOD() {
+        soundManager.playMusic('bsod');
+        const bsod = document.getElementById('bsod');
+        const percentEl = document.getElementById('bsod-percent');
+        const actions = document.getElementById('bsod-actions');
+        bsod.style.display = 'block';
+        actions.classList.add('hidden');
+        
+        let percent = 0;
+        const itv = setInterval(() => {
+            percent += Math.random() * 8;
+            if (percent >= 100) {
+                percent = 100;
+                clearInterval(itv);
+                actions.classList.remove('hidden');
+            }
+            percentEl.innerText = Math.floor(percent) + "% complete";
+        }, 150);
+    }
+
+    function rebootSimulation() {
+        soundManager.playSfx('reboot');
+        soundManager.playMusic('main');
+        state.loops++;
+        state.phase = 'clicker';
+        state.realScore = 0;
+        state.score = 0;
+        state.lives = 999;
+        state.clickerPhase = 0;
+        
+        document.getElementById('bsod').style.display = 'none';
+        document.getElementById('phase-canvas').classList.add('hidden');
+        document.getElementById('phase-clicker').classList.remove('hidden');
+        
+        mainBtn.style.position = 'relative';
+        mainBtn.style.left = 'auto';
+        mainBtn.style.top = 'auto';
+        mainBtn.innerText = "WIN THE GAME";
+        scoreEl.innerText = "0";
+        
+        clickerTitle.innerText = "CLICK TO WIN (VERSION " + (state.loops + 1) + ".0)";
+        document.getElementById('clicker-sub').innerText = "This time, it's personal.";
+        showMessage("SYSTEM REBOOTED. DATA REDUNDANCY CHECK: FAILED.");
+    }
+
+    function triggerTrueWin() {
+        soundManager.playSfx('reveal');
+        soundManager.playMusic('win');
+        document.getElementById('bsod').style.display = 'none';
+        document.getElementById('true-win').style.display = 'flex';
+        state.gameRunning = false;
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (state.miniGame === 'flappy' && e.code === 'Space') {
+            flappy.v = flappy.jump;
+            soundManager.playSfx('jump');
+        }
+        if (state.miniGame === 'runner') {
+            if (e.code === 'ArrowLeft') runner.playerX -= 20;
+            if (e.code === 'ArrowRight') runner.playerX += 20;
+        }
+    });
+
+    showMessage("Click the button to secure your victory.");
+</script>
+</body>
+</html>
