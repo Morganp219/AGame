@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Totally Normal Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: 'VT323', monospace;
+  }
+
+  #game-container {
+    width: 450px;
+    height: 450px;
+    background: #0a0a0a;
+    border: 2px solid #333;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ---- CLICKER PHASE ---- */
+  #clicker-phase {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  #game-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: #7fff7f;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  #click-count {
+    font-size: 48px;
+    color: #fff;
+    min-height: 60px;
+    text-align: center;
+  }
+
+  #click-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    padding: 14px 28px;
+    background: #1a1a2e;
+    color: #7fff7f;
+    border: 2px solid #7fff7f;
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.1s;
+    user-select: none;
+  }
+
+  #click-btn:hover {
+    box-shadow: 0 0 12px #7fff7f88;
+  }
+
+  #click-btn:active {
+    transform: scale(0.97);
+  }
+
+  #hint-text {
+    font-size: 18px;
+    color: #444;
+    text-align: center;
+    min-height: 24px;
+    transition: color 0.5s;
+  }
+
+  /* ---- PLATFORMER PHASE ---- */
+  #platformer-phase {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #0a0a0a;
+  }
+
+  #controls-panel {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #111;
+    border: 1px solid #333;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #888;
+    line-height: 1.7;
+    z-index: 10;
+  }
+
+  #controls-panel .ctrl-title {
+    color: #7fff7f;
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+  }
+
+  #plat-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 450px;
+    height: 450px;
+  }
+
+  #win-msg {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #7fff7f;
+    text-align: center;
+    background: #0a0a0a;
+    padding: 20px 24px;
+    border: 2px solid #7fff7f;
+    z-index: 20;
+    line-height: 1.8;
+  }
+
+  /* Glitch animation */
+  @keyframes glitch1 {
+    0%   { clip-path: inset(10% 0 85% 0); transform: translate(-4px,0); }
+    25%  { clip-path: inset(60% 0 10% 0); transform: translate(4px,0); }
+    50%  { clip-path: inset(30% 0 50% 0); transform: translate(-2px,0); }
+    75%  { clip-path: inset(80% 0 5%  0); transform: translate(3px,0); }
+    100% { clip-path: inset(10% 0 85% 0); transform: translate(-4px,0); }
+  }
+  @keyframes glitch2 {
+    0%   { clip-path: inset(50% 0 30% 0); transform: translate(4px,0);  filter: hue-rotate(90deg); }
+    50%  { clip-path: inset(20% 0 60% 0); transform: translate(-4px,0); filter: hue-rotate(180deg); }
+    100% { clip-path: inset(50% 0 30% 0); transform: translate(4px,0);  filter: hue-rotate(90deg); }
+  }
+
+  .glitching::before,
+  .glitching::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    pointer-events: none;
+  }
+  .glitching::before { animation: glitch1 0.15s infinite; background: #f00a; }
+  .glitching::after  { animation: glitch2 0.12s infinite; background: #0ff5; }
+</style>
+</head>
+<body>
+<div id="game-container">
+
+  <!-- CLICKER PHASE -->
+  <div id="clicker-phase">
+    <div id="game-title">CLICK THE BUTTON</div>
+    <div id="click-count">0</div>
+    <button id="click-btn">CLICK ME</button>
+    <div id="hint-text"></div>
+  </div>
+
+  <!-- PLATFORMER PHASE -->
+  <div id="platformer-phase">
+    <canvas id="plat-canvas" width="450" height="450"></canvas>
+    <div id="controls-panel">
+      <div class="ctrl-title">CONTROLS</div>
+      <span id="ctrl-lines"></span>
+    </div>
+    <div id="win-msg">YOU WIN!<br><br>Turns out...<br>going backwards<br>was right all along.</div>
+  </div>
+
+</div>
+
+<script>
+// ===================== CLICKER PHASE =====================
+const clickerPhase = document.getElementById('clicker-phase');
+const platformerPhase = document.getElementById('platformer-phase');
+const clickCountEl = document.getElementById('click-count');
+const clickBtn = document.getElementById('click-btn');
+const hintText = document.getElementById('hint-text');
+const gameContainer = document.getElementById('game-container');
+
+let clicks = 0;
+let displayedCount = 0;
+let btnFalling = false;
+let btnDropped = false;
+let btnY = 0;
+let btnVY = 0;
+let fallingRAF = null;
+let btnOriginalTop = null;
+
+clickBtn.addEventListener('click', () => {
+  if (btnDropped) return;
+  clicks++;
+  updateDisplay();
+});
+
+function updateDisplay() {
+  // Lie about the count between 8-19
+  if (clicks < 8) {
+    displayedCount = clicks;
+    clickCountEl.style.color = '#fff';
+  } else if (clicks < 20) {
+    // randomly add or subtract from displayed count by ±1
+    const lie = displayedCount + (Math.random() < 0.5 ? 1 : -1);
+    displayedCount = Math.max(0, lie);
+    clickCountEl.style.color = '#ff9944';
+    hintText.textContent = clicks === 8 ? "something seems off..." : hintText.textContent;
+    hintText.style.color = '#ff9944';
+  }
+
+  clickCountEl.textContent = displayedCount;
+
+  if (clicks === 10 && !btnFalling) {
+    startFalling();
+  }
+}
+
+function startFalling() {
+  btnFalling = true;
+  hintText.textContent = "uh oh.";
+  hintText.style.color = '#ff4444';
+
+  // Get current button position
+  const btnRect = clickBtn.getBoundingClientRect();
+  const containerRect = gameContainer.getBoundingClientRect();
+  btnOriginalTop = clickBtn.offsetTop;
+
+  clickBtn.style.position = 'absolute';
+  clickBtn.style.left = '50%';
+  clickBtn.style.transform = 'translateX(-50%)';
+  clickBtn.style.top = btnOriginalTop + 'px';
+
+  // Wiggle more with each click after 10
+  let wobble = 0;
+  const wobbleInterval = setInterval(() => {
+    if (clicks >= 20) { clearInterval(wobbleInterval); return; }
+    wobble++;
+    const shake = (clicks - 9) * 2;
+    clickBtn.style.marginLeft = (Math.sin(wobble * 1.5) * shake) + 'px';
+  }, 60);
+
+  // Drop on click 20
+  const dropWatcher = setInterval(() => {
+    if (clicks >= 20) {
+      clearInterval(dropWatcher);
+      clearInterval(wobbleInterval);
+      dropButton();
+    }
+  }, 50);
+}
+
+function dropButton() {
+  btnDropped = true;
+  hintText.textContent = "GOODBYE";
+  clickBtn.style.marginLeft = '0px';
+  clickBtn.style.transition = 'none';
+
+  let top = parseFloat(clickBtn.style.top);
+  let vy = 0;
+
+  function fall() {
+    vy += 0.7;
+    top += vy;
+    clickBtn.style.top = top + 'px';
+    if (top < 500) {
+      requestAnimationFrame(fall);
+    } else {
+      clickBtn.style.display = 'none';
+      // Wait 5s then glitch -> platformer
+      setTimeout(startGlitch, 5000);
+    }
+  }
+  requestAnimationFrame(fall);
+}
+
+// ===================== GLITCH TRANSITION =====================
+function startGlitch() {
+  gameContainer.classList.add('glitching');
+  let glitchCount = 0;
+  const glitchInterval = setInterval(() => {
+    glitchCount++;
+    // Flash visibility
+    gameContainer.style.opacity = Math.random() > 0.5 ? '1' : '0.3';
+    gameContainer.style.transform = `translate(${(Math.random()-0.5)*6}px, ${(Math.random()-0.5)*6}px)`;
+    if (glitchCount > 20) {
+      clearInterval(glitchInterval);
+      gameContainer.classList.remove('glitching');
+      gameContainer.style.opacity = '1';
+      gameContainer.style.transform = '';
+      launchPlatformer();
+    }
+  }, 80);
+}
+
+// ===================== PLATFORMER PHASE =====================
+function launchPlatformer() {
+  clickerPhase.style.display = 'none';
+  platformerPhase.style.display = 'block';
+  initPlatformer();
+}
+
+function initPlatformer() {
+  const canvas = document.getElementById('plat-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 450, H = 450;
+
+  // --- Random fake controls ---
+  const keyNames = ['F','G','H','J','K','L','Z','X','C','V','B','N','M',
+                    'Tab','Ctrl','Alt','Shift','Enter','Backspace','Q','E','R','T','Y','U','I','O','P'];
+  function randKey() { return keyNames[Math.floor(Math.random() * keyNames.length)]; }
+  const fakeControls = [
+    { key: randKey(), action: 'Move Right' },
+    { key: randKey(), action: 'Jump' },
+    { key: randKey(), action: 'Crouch' },
+    { key: randKey(), action: 'Attack' },
+  ];
+  const ctrlEl = document.getElementById('ctrl-lines');
+  ctrlEl.innerHTML = fakeControls.map(c => `${c.key.padEnd(6,' ')} — ${c.action}`).join('<br>');
+
+  // --- World layout ---
+  // World coords: player starts at worldX=300. Goal is at worldX=-200 (off left edge).
+  // Lots of enticing platforms extending to the RIGHT (positive x).
+  // A hard wall / pit on the right eventually to stop infinite travel.
+
+  const GRAVITY = 0.55;
+  const JUMP_FORCE = -11.5;
+  const MOVE_SPEED = 3;
+
+  // World platforms — x in world coords, y from top (screen coords)
+  // Player spawn ~worldX=300, screen center ~225
+  // Camera: cameraX = player.worldX - 225
+  const platforms = [
+    // Ground segments
+    { x: -1100, y: 390, w: 1500, h: 12 }, // main floor stretching left
+    { x:  500,  y: 390, w: 50,   h: 12 }, // bridge to first right platform gap
+    { x:  580,  y: 390, w: 400,  h: 12 }, // right floor segment 1
+    { x: 1010,  y: 390, w: 450,  h: 12 }, // right floor segment 2
+    // Platforms going RIGHT — tight, clearly reachable staircase feel
+    { x:  510, y: 320, w: 90,  h: 10 },
+    { x:  640, y: 270, w: 90,  h: 10 },
+    { x:  770, y: 320, w: 90,  h: 10 },
+    { x:  900, y: 260, w: 90,  h: 10 },
+    { x: 1020, y: 310, w: 90,  h: 10 },
+    { x: 1130, y: 260, w: 90,  h: 10 },
+    { x: 1200, y: 390, w: 250, h: 12 }, // "almost there" floor
+    // Real path going LEFT — also jumpable gaps (~140px wide, ~55px tall each step)
+    { x: -290, y: 335, w: 85,  h: 10 },
+    { x: -450, y: 280, w: 85,  h: 10 },
+    { x: -610, y: 225, w: 85,  h: 10 },
+    { x: -770, y: 170, w: 85,  h: 10 },
+    // Goal platform (deep off left edge)
+    { x: -930, y: 115, w: 130, h: 10 },
+  ];
+
+  // Decorations on the right to lure player
+  const decor = [
+    { x: 700,  y: 370, label: '→', color: '#ffdd44', big: true },
+    { x: 900,  y: 370, label: '→', color: '#ffdd44', big: true },
+    { x: 1050, y: 370, label: '→', color: '#ffdd44', big: true },
+    { x: 1180, y: 370, label: '★ GOAL THIS WAY ★', color: '#ff9944', big: false },
+    { x: 960,  y: 218, label: '↑ KEEP GOING', color: '#ff9944', big: false },
+  ];
+
+  // Fake "goal" on right — triggers crash
+  const fakeGoal = { x: 1320, y: 320, w: 40, h: 70 };
+
+  // Real goal — deep off screen left
+  const realGoal = { x: -915, y: 85, w: 60, h: 30 };
+
+  // Player in world coords
+  const player = {
+    wx: 300, y: 340,   // wx = world x
+    w: 22, h: 28,
+    vx: 0, vy: 0,
+    onGround: false,
+    facing: 1,
+  };
+
+  // Camera
+  let cameraX = player.wx - 225;
+
+  const keys = {};
+  window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+  window.addEventListener('keyup',  e => { keys[e.code] = false; });
+
+  let won = false;
+
+  function toScreen(wx) { return wx - cameraX; }
+
+  function update() {
+    if (won) return;
+
+    if (keys['ArrowLeft'])       { player.vx = -MOVE_SPEED; player.facing = -1; }
+    else if (keys['ArrowRight']) { player.vx =  MOVE_SPEED; player.facing =  1; }
+    else player.vx = 0;
+
+    if ((keys['ArrowUp'] || keys['Space']) && player.onGround) {
+      player.vy = JUMP_FORCE;
+      player.onGround = false;
+    }
+
+    player.vy += GRAVITY;
+    player.wx += player.vx;
+    player.y  += player.vy;
+
+    player.onGround = false;
+    for (const p of platforms) {
+      if (
+        player.wx + player.w > p.x &&
+        player.wx < p.x + p.w &&
+        player.y + player.h > p.y &&
+        player.y + player.h < p.y + p.h + 14 &&
+        player.vy >= 0
+      ) {
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      }
+    }
+
+    // Fall reset
+    if (player.y > H + 60) {
+      player.wx = 300; player.y = 330;
+      player.vx = 0; player.vy = 0;
+    }
+
+    // Smooth camera follow
+    const targetCam = player.wx - 225;
+    cameraX += (targetCam - cameraX) * 0.12;
+
+    // Check FAKE goal — crash the game
+    if (
+      player.wx + player.w > fakeGoal.x &&
+      player.wx < fakeGoal.x + fakeGoal.w &&
+      player.y + player.h > fakeGoal.y &&
+      player.y < fakeGoal.y + fakeGoal.h
+    ) {
+      triggerCrash();
+      return;
+    }
+
+    // Check real goal
+    if (
+      player.wx + player.w > realGoal.x &&
+      player.wx < realGoal.x + realGoal.w &&
+      player.y + player.h > realGoal.y &&
+      player.y < realGoal.y + realGoal.h
+    ) {
+      won = true;
+      document.getElementById('win-msg').style.display = 'block';
+    }
+  }
+
+  function triggerCrash() {
+    won = true; // stop game loop
+    const container = document.getElementById('game-container');
+
+    // Flash red a few times
+    let flashes = 0;
+    const flashInterval = setInterval(() => {
+      container.style.background = flashes % 2 === 0 ? '#3a0000' : '#0a0a0a';
+      flashes++;
+      if (flashes > 6) {
+        clearInterval(flashInterval);
+        showCrashScreen();
+      }
+    }, 80);
+  }
+
+  function showCrashScreen() {
+    const container = document.getElementById('game-container');
+    container.innerHTML = `
+      <div style="
+        width:100%; height:100%;
+        background:#0a0a0a;
+        display:flex; flex-direction:column;
+        align-items:center; justify-content:center;
+        font-family:'VT323',monospace;
+        gap:16px;
+        padding: 30px;
+        box-sizing:border-box;
+      ">
+        <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:#ff3333;text-align:center;line-height:2;">
+          FATAL ERROR
+        </div>
+        <div style="color:#ff6644;font-size:20px;text-align:center;line-height:1.5;">
+          EXCEPTION_ACCESS_VIOLATION<br>
+          0x00000000DEADBEEF<br>
+          game.exe has stopped working
+        </div>
+        <div style="color:#555;font-size:16px;text-align:center;">
+          The application encountered an<br>
+          unrecoverable error and must close.
+        </div>
+        <div style="color:#333;font-size:14px;font-family:'Press Start 2P',monospace;text-align:center;line-height:1.8;">
+          ERROR CODE: 0xWRONG_DOOR
+        </div>
+        <button onclick="location.reload()" style="
+          margin-top:8px;
+          font-family:'Press Start 2P',monospace;
+          font-size:9px;
+          padding:10px 20px;
+          background:#1a0000;
+          color:#ff3333;
+          border:2px solid #ff3333;
+          cursor:pointer;
+        ">[ RELOAD PAGE ]</button>
+      </div>
+    `;
+  }
+
+  function drawPlatform(p) {
+    const sx = toScreen(p.x);
+    if (sx > W + 20 || sx + p.w < -20) return;
+    ctx.fillStyle = '#1e3a1e';
+    ctx.fillRect(sx, p.y, p.w, p.h);
+    ctx.fillStyle = '#3a7a3a';
+    ctx.fillRect(sx, p.y, p.w, 3);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#141414';
+    ctx.lineWidth = 1;
+    const gridOff = cameraX % 30;
+    for (let x = -gridOff; x < W; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // Platforms
+    for (const p of platforms) drawPlatform(p);
+
+    // Decorations (world-space)
+    for (const d of decor) {
+      const sx = toScreen(d.x);
+      if (sx < -100 || sx > W + 100) continue;
+      ctx.font = d.big ? "bold 28px 'VT323', monospace" : "16px 'VT323', monospace";
+      ctx.fillStyle = d.color;
+      ctx.fillText(d.label, sx, d.y);
+    }
+
+    // Fake goal (right side door)
+    const fgSX = toScreen(fakeGoal.x);
+    if (fgSX > -60 && fgSX < W + 60) {
+      ctx.fillStyle = '#334';
+      ctx.fillRect(fgSX, fakeGoal.y, fakeGoal.w, fakeGoal.h);
+      ctx.fillStyle = '#6688ff';
+      ctx.fillRect(fgSX + 2, fakeGoal.y + 2, fakeGoal.w - 4, fakeGoal.h - 4);
+      ctx.fillStyle = '#fff';
+      ctx.font = "10px 'Press Start 2P', monospace";
+      ctx.fillText('GOAL', fgSX - 2, fakeGoal.y - 6);
+      // door knob
+      ctx.fillStyle = '#ffdd44';
+      ctx.beginPath();
+      ctx.arc(fgSX + fakeGoal.w - 8, fakeGoal.y + fakeGoal.h / 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Real goal (deep off left) — glowing green door, no label
+    const rgSX = toScreen(realGoal.x);
+    if (rgSX > -80 && rgSX < W + 80) {
+      ctx.fillStyle = '#0f2f0f';
+      ctx.fillRect(rgSX, realGoal.y, realGoal.w, realGoal.h);
+      ctx.shadowColor = '#7fff7f';
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = '#7fff7f';
+      ctx.fillRect(rgSX + 2, realGoal.y + 2, realGoal.w - 4, realGoal.h - 4);
+      ctx.shadowBlur = 0;
+    }
+
+    // START HERE label in world (stays near spawn)
+    const startSX = toScreen(288);
+    ctx.font = "15px 'VT323', monospace";
+    ctx.fillStyle = '#888';
+    ctx.fillText('[ START ]', startSX, 420);
+
+    // Player
+    const px = toScreen(player.wx);
+    const py = player.y;
+    ctx.fillStyle = '#7fff7f';
+    ctx.fillRect(px + 4, py + 10, 14, 18);
+    ctx.fillStyle = '#d4a574';
+    ctx.fillRect(px + 5, py, 12, 12);
+    ctx.fillStyle = '#000';
+    const eyeX = player.facing > 0 ? px + 13 : px + 6;
+    ctx.fillRect(eyeX, py + 3, 2, 2);
+    ctx.fillStyle = '#3a5a3a';
+    const legAnim = Math.abs(player.vx) > 0 ? Math.floor(Date.now() / 100) % 2 : 0;
+    ctx.fillRect(px + 4,  py + 26, 6, legAnim === 0 ? 5 : 3);
+    ctx.fillRect(px + 12, py + 26, 6, legAnim === 0 ? 3 : 5);
+
+    // Mini direction nudge arrow on HUD (points right — lies)
+    ctx.font = "13px 'VT323', monospace";
+    ctx.fillStyle = '#ff664488';
+    ctx.fillText('→ FORWARD', 10, 20);
+  }
+
+  function loop() {
+    update();
+    draw();
+    if (!won) requestAnimationFrame(loop);
+  }
+  loop();
+}
+</script>
+</body>
+</html>
